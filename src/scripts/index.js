@@ -45,8 +45,11 @@ function showImageData(data) {
 	document.body.appendChild(c);
 	const ctx = c.getContext("2d");
 	createImageBitmap(data)
-		.then(img => ctx.drawImage(img, 0, 0));
+		.then(img => {
+			ctx.drawImage(img, 0, 0);
+		});
 
+	return ctx;
 }
 
 /*
@@ -58,17 +61,27 @@ function demo(data) {
 	const original = data;
 	const scaled = ImageProcessor.scale(original, SCALE_PX);
 	const noBg = ImageProcessor.filterDarkRegions(scaled, DARK_THRESH);
+	const center = ImageProcessor.findCenter(noBg);
 
-	console.log(original, scaled, noBg);
+	const shapeGraph = ImageProcessor.scanShape(noBg, center, 50);
+
+	console.log(shapeGraph);
+
 
 	showImageData(original);
 	showImageData(scaled);
 	showImageData(noBg);
+	const ctx = showImageData(noBg);
+	setTimeout(() => {
+		ctx.beginPath();
+		ctx.fillStyle="rgb(0, 0, 0)";
+		ctx.arc(...center, 2, 0, 2*Math.PI);
+		ctx.fill();
+	}, 500);
 
 	// crop image to only include mask.
-	// somehow figure out rotation angle.
-	// compensate for rotation.
-	// divide image into 3x3 grid
+	// mask, find center, find corners based on distance from center
+	// divide image into 3x3 grid -> should be easy if you have the 4 corners!
 	// find avg color of each tile
 	// use KNN model + training data to match colors to letters
 }
