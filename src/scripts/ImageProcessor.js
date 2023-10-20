@@ -117,8 +117,7 @@ ImageProcessor.scanShape = (data, center, n) => {
 		for each angle: start outside the image and move in until you find a non-transparent pixel.
 		record (theta, r) for each point.
 	*/
-	const arr_radius = [];
-	const arr_theta = [];
+	const out = []
 
 	const getDistance = (x1, y1, x2, y2) => Math.sqrt(Math.pow(x1-x2, 2) + Math.pow(x1-x2, 2));
 	const maxRadius = Math.ceil(Math.max(
@@ -143,9 +142,56 @@ ImageProcessor.scanShape = (data, center, n) => {
 				break;
 			}
 		}
-		arr_theta.push(theta);
-		arr_radius.push(dist);
+		out.push([theta, dist]);
 	}
 
-	return [arr_theta, arr_radius];
+	return out;
+}
+ImageProcessor.smoothData = (points) => {
+	/*
+	applies two data smoothing functions.
+
+	#1: group all adjacent points with the same y-value.
+	#2: set each point's y value to be the average of its two neighbors.
+	*/
+	console.log(points);
+	const grouped = [];
+	for (let i = 0; i < points.length; i++) {
+		const y = points[i][1];
+		const groupStart = i;
+		while (i < points.length && points[i][1] == y) {
+			i++;
+			console.log(y, i);
+		}
+		i--;
+
+		const x = (points[i][0] + points[groupStart][0]) / 2;
+
+		grouped.push([x, y]);
+	}
+
+	const smoothed = [];
+	smoothed.push(grouped[0]);
+	for (let i = 1; i < grouped.length - 1; i++) {
+		smoothed.push(
+			[
+				(grouped[i-1][0] + grouped[i][0] + grouped[i+1][0])/3,
+				(grouped[i-1][1] + grouped[i][1] + grouped[i+1][1])/3
+			]
+		);
+	}
+	smoothed.push(grouped[grouped.length-1]);
+
+	return smoothed;
+}
+
+ImageProcessor.derivative = (points) => {
+	const deriv = [];
+
+	for (let i = 0; i < points.length-1; i++) {
+		const slope = (points[i+1][1] - points[i][1]) / (points[i+1][0] - points[i][0]);
+		deriv.push([points[i][0], slope]);
+	}
+
+	return ImageProcessor.smoothData(deriv);
 }

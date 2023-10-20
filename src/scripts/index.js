@@ -63,9 +63,15 @@ function demo(data) {
 	const noBg = ImageProcessor.filterDarkRegions(scaled, DARK_THRESH);
 	const center = ImageProcessor.findCenter(noBg);
 
-	const shapeGraph = ImageProcessor.scanShape(noBg, center, 50);
+	const shapeGraph = ImageProcessor.scanShape(noBg, center, 180);
+	const smoothedShapeGraph = ImageProcessor.smoothData(shapeGraph);
 
-	console.log(shapeGraph);
+	const firstDeriv = ImageProcessor.derivative(smoothedShapeGraph);
+	const secondDeriv = ImageProcessor.derivative(firstDeriv);
+
+	console.log(stringify(smoothedShapeGraph));
+	console.log(stringify(firstDeriv));
+	console.log(stringify(secondDeriv));
 
 
 	showImageData(original);
@@ -84,4 +90,12 @@ function demo(data) {
 	// divide image into 3x3 grid -> should be easy if you have the 4 corners!
 	// find avg color of each tile
 	// use KNN model + training data to match colors to letters
+}
+
+function stringify(graph) {
+	out = "";
+	for (i = 0; i < graph.length; i++) {
+		out += `(${graph[i][0]}, ${graph[i][1]}), `;
+	}
+	return out.slice(0, -2);
 }
