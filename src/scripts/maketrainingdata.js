@@ -3,7 +3,7 @@ CubeVision website?
 
 homepage (explanation)
 connect to glasses (connect to AR glasses, send and recieve commands)
-use locally (capture images from camera or locally)
+use locally (capture images from camera or upload local).
 
 
 for now: upload an image and process it.
@@ -15,7 +15,7 @@ window.onload = () => {
 
 function handleFileUpload(e) {
 	blobToImageData(e.srcElement.files[0])
-	.then((data) => demo(data));
+	.then((data) => display(data));
 }
 
 /*
@@ -38,11 +38,9 @@ function blobToImageData(blob) {
 adds a canvas to the body and draws the provided ImageData to it.
 */
 function showImageData(data) {
-	const c = document.createElement("canvas");
+	const c = document.getElementById("c");
 	c.width = data.width;
 	c.height = data.height;
-	c.className = "img-display";
-	document.body.appendChild(c);
 	const ctx = c.getContext("2d");
 	createImageBitmap(data)
 		.then(img => {
@@ -55,7 +53,7 @@ function showImageData(data) {
 /*
 takes an ImageData object and runs it through the cube detection process.
 */
-function demo(data) {
+function display(data) {
 	const SCALE_PX = 80;
 	const DARK_THRESH = 80;
 	const original = data;
@@ -66,36 +64,27 @@ function demo(data) {
 	const shapeGraph = ImageProcessor.scanShape(noBg, center, 180);
 	const smoothedShapeGraph = ImageProcessor.smoothData(shapeGraph);
 
-	const firstDeriv = ImageProcessor.derivative(smoothedShapeGraph);
-	const secondDeriv = ImageProcessor.derivative(firstDeriv);
+	const maxima = ImageProcessor.getMaxima(smoothedShapeGraph);
+	const corners = ImageProcessor.polarToCartesian(maxima, center);
 
-	console.log(stringify(smoothedShapeGraph));
-	console.log(stringify(firstDeriv));
-	console.log(stringify(secondDeriv));
+	const colors = ImageProcessor.getTileColors(noBg, ImageProcessor.getSquareFunction(corners));
+
+
+	console.log(ImageProcessor.isSquare(maxima));
+	console.log(colors);
+	console.log(ImageProcessor.mapToLetters(colors, [
+		[255, 255, 255, "w"],
+		[255, 63, 0, "r"],
+		[0, 255, 0, "g"],
+		[0, 255, 255, "b"],
+		[255, 255, 0, "y"],
+		[255, 127, 0, "o"]
+	]));
 
 
 	showImageData(original);
-	showImageData(scaled);
-	showImageData(noBg);
-	const ctx = showImageData(noBg);
-	setTimeout(() => {
-		ctx.beginPath();
-		ctx.fillStyle="rgb(0, 0, 0)";
-		ctx.arc(...center, 2, 0, 2*Math.PI);
-		ctx.fill();
-	}, 500);
-
-	// crop image to only include mask.
-	// mask, find center, find corners based on distance from center
-	// divide image into 3x3 grid -> should be easy if you have the 4 corners!
-	// find avg color of each tile
-	// use KNN model + training data to match colors to letters
 }
 
-function stringify(graph) {
-	out = "";
-	for (i = 0; i < graph.length; i++) {
-		out += `(${graph[i][0]}, ${graph[i][1]}), `;
-	}
-	return out.slice(0, -2);
+function generate() {
+	// get actual colors, get user submitted color string, log formatted data to console.
 }
