@@ -8,6 +8,8 @@ use locally (capture images from camera or upload local).
 
 for now: upload an image and process it.
 */
+let COLOR_LIST = [];
+let DEBUG_IMG_DATA;
 
 window.onload = () => {
 	document.querySelector("#file-input").onchange = handleFileUpload;
@@ -37,8 +39,8 @@ function blobToImageData(blob) {
 /*
 adds a canvas to the body and draws the provided ImageData to it.
 */
-function showImageData(data) {
-	const c = document.getElementById("c");
+function showImageData(data, target="c") {
+	const c = document.getElementById(target);
 	c.width = data.width;
 	c.height = data.height;
 	const ctx = c.getContext("2d");
@@ -55,36 +57,72 @@ takes an ImageData object and runs it through the cube detection process.
 */
 function display(data) {
 	const SCALE_PX = 80;
-	const DARK_THRESH = 80;
+	const COLOR_THRESH = 50;
 	const original = data;
 	const scaled = ImageProcessor.scale(original, SCALE_PX);
-	const noBg = ImageProcessor.filterDarkRegions(scaled, DARK_THRESH);
-	const center = ImageProcessor.findCenter(noBg);
 
-	const shapeGraph = ImageProcessor.scanShape(noBg, center, 180);
+	const noBg = ImageProcessor.removeBackground(scaled, 5, COLOR_THRESH);
+	const filled = ImageProcessor.fillGaps(noBg);
+	const center = ImageProcessor.findCenter(filled);
+
+	const shapeGraph = ImageProcessor.scanShape(filled, center, 90);
 	const smoothedShapeGraph = ImageProcessor.smoothData(shapeGraph);
 
 	const maxima = ImageProcessor.getMaxima(smoothedShapeGraph);
+	if (ImageProcessor.isSquare(maxima) == false) {
+		console.log("Error: image is not a square");
+		clear();
+		showImageData(filled);
+		return;
+	}
 	const corners = ImageProcessor.polarToCartesian(maxima, center);
-
-	const colors = ImageProcessor.getTileColors(noBg, ImageProcessor.getSquareFunction(corners));
-
-
-	console.log(ImageProcessor.isSquare(maxima));
-	console.log(colors);
-	console.log(ImageProcessor.mapToLetters(colors, [
-		[255, 255, 255, "w"],
-		[255, 63, 0, "r"],
-		[0, 255, 0, "g"],
-		[0, 255, 255, "b"],
-		[255, 255, 0, "y"],
-		[255, 127, 0, "o"]
-	]));
-
-
+	const colors = ImageProcessor.getTileColors(filled, ImageProcessor.getSquareFunction(corners));
 	showImageData(original);
+	showImageData(filled, "c2");
+	drawColors(colors);
+	COLOR_LIST = colors;
+}
+
+function clear() {
+	const c = document.getElementById("c");
+	const ctx = c.getContext("2d");
+	ctx.clearRect(0, 0, c.width, c.height);
+
+	document.querySelector("#cube-string").value = "";
 }
 
 function generate() {
-	// get actual colors, get user submitted color string, log formatted data to console.
+	// get actual colors, get user submitted color string, log formatted data string to console.
+	if (COLOR_LIST.length == 0) {console.log("Error: no image uploaded"); return}
+	let colorString = document.querySelector("#cube-string").value;
+
+	stringOutput = "[";
+	COLOR_LIST.forEach((color, i) => {
+		stringOutput += "["
+		color.forEach(channel => {
+			stringOutput += channel + ", ";
+		});
+		stringOutput += `"${colorString[i]}"]`;
+		if (i != COLOR_LIST.length - 1) stringOutput += ", ";
+		stringOutput += "";
+	});
+	stringOutput += "],\n"
+
+	document.getElementById("text-output").innerText+=stringOutput;
+
+	clear();
+
+}
+
+function drawColors(colorList) {
+	const c = document.getElementById("c3");
+	c.width = 3;
+	c.height = 3;
+	const ctx = c.getContext("2d");
+	colorList.forEach((v, i) => {
+		ctx.fillStyle = `rgb(${v[0]}, ${v[1]}, ${v[2]})`;
+		ctx.fillRect(i%3, Math.floor(i/3), 1, 1);
+	});
+
+	return ctx;
 }

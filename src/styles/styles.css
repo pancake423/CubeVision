@@ -4,9 +4,13 @@ body {
 	flex-direction: row;
 	align-items: flex-start;
 	justify-content: space-evenly;
+	flex-wrap: wrap;
 }
 .img-display {
-	width: 50%;
+	width: 10%;
 	margin: 3rem;
 	image-rendering: pixelated;
+}
+.text-output {
+	width: 100%;
 }

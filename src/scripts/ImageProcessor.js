@@ -2,7 +2,7 @@ const ImageProcessor = {};
 
 //attempts to process the given image data as a picture of a rubik's cube face.
 ImageProcessor.process = (data) => {
-
+	
 }
 
 //scales an image to be targetWidth pixels wide.
@@ -54,34 +54,161 @@ ImageProcessor.copy = (data) => {
 	return out;
 }
 
+ImageProcessor.crop = (data, sx, sy, dx, dy) => {
+	const a = new Uint8ClampedArray(dx*dy*4);
+	for (let y = sy; y < sy + dy; y++) {
+		const startIndex = (sx + y * data.width) * 4;
+		const transfer = data.data.slice(startIndex, startIndex + dx*4);
+
+		transfer.forEach((v, i) => {
+			a[y-sy + i] = v;
+		});
+	}
+
+	const out = new ImageData(a, dx, dy);
+	return out;
+}
+
 //returns the average channel values of a given region of an image
-ImageProcessor.getAverageColor = (data, x, y, dx, dy, sampleDensity) => {
+ImageProcessor.getAverageColor = (data, x, y, dx, dy, sampleDensity, ignoreTransparent=false) => {
 	let totals = [0, 0, 0, 0];
 
 	const nSamples = Math.ceil(dx * dy * sampleDensity);
+	let countAccepted = 0;
 
 	for (let i = 0; i < nSamples; i++) {
 		const xpos = Math.floor(Math.random() * dx) + x;
 		const ypos = Math.floor(Math.random() * dy) + y;
 		const p = ImageProcessor.getPixel(data, xpos, ypos);
-		totals = totals.map((v, i) => v + p[i]);
+		if (ignoreTransparent == false || p[3] != 0) {
+			totals = totals.map((v, i) => v + p[i]);
+			countAccepted++;
+		}
 	}
-
-	return totals.map((v) => Math.floor(v /= nSamples));
+	if (countAccepted == 0) return [0, 0, 0, 0];
+	return totals.map((v) => Math.floor(v /= countAccepted));
 }
 
 /*
-set color of all pixels below the brightness threshold to [0, 0, 0, 0].
-brightness threshold is max(r, g, b).
+Approximates the background color of an image by taking a <thickness> wide
+strip around the outside of the image.
+
+returns the average color of this region.
 */
-ImageProcessor.filterDarkRegions = (data, brightnessThreshold) => {
+ImageProcessor.getBackgroundColor = (data, thickness) => {
+	let colors = [
+		ImageProcessor.getAverageColor(data, 0, 0, data.width, thickness, 1, true),
+		ImageProcessor.getAverageColor(data, 0, data.height-thickness, data.width, thickness, 1, true),
+		ImageProcessor.getAverageColor(data, 0, 0, thickness, data.height, 1, true),
+		ImageProcessor.getAverageColor(data, data.width-thickness, 0, thickness, data.height, 1, true)
+	];
+	sum = [0, 0, 0];
+	colors.forEach(color => {
+		for (let i = 0; i < 3; i++) sum[i] += color[i];
+	});
+	return sum.map(v => Math.floor(v/3));
+}
+ImageProcessor.getBorderAlpha = (data, thickness) => {
+	return ImageProcessor.getAverageColor(data, 0, 0, data.width, thickness, 1)[3]
+		+ ImageProcessor.getAverageColor(data, 0, data.height-thickness, data.width, thickness, 1)[3]
+		+ ImageProcessor.getAverageColor(data, 0, 0, thickness, data.height, 1)[3]
+		+ ImageProcessor.getAverageColor(data, data.width-thickness, 0, thickness, data.height, 1)[3]
+}
+
+/*
+set color of all pixels within <threshold> of colorMatch on all three channels to transparent black.
+*/
+ImageProcessor.filterColorRegions = (data, colorMatch, threshold) => {
 	const out = ImageProcessor.copy(data);
 
 	for (let x = 0; x < data.width; x++) {
 		for (let y = 0; y < data.height; y++) {
-			const brightness = Math.max(...ImageProcessor.getPixel(data, x, y).slice(0, 3));
-			if (brightness < brightnessThreshold) {
+			const color = ImageProcessor.getPixel(data, x, y);
+			if (
+				Math.abs(color[0] - colorMatch[0]) < threshold
+				&& Math.abs(color[1] - colorMatch[1]) < threshold
+				&& Math.abs(color[2] - colorMatch[2]) < threshold
+			) {
 				ImageProcessor.setPixel(out, x, y, [0, 0, 0, 0]);
+			}
+		}
+	}
+	return out;
+}
+
+ImageProcessor.removeBackground = (data, thickness, threshold) => {
+	let out = ImageProcessor.copy(data);
+	let iter = 0;
+	const MAX_ITER = 5;
+	while (ImageProcessor.getBorderAlpha(out, thickness) > 0 && iter < MAX_ITER) {
+		const color = ImageProcessor.getBackgroundColor(out, thickness);
+		out = ImageProcessor.filterColorRegions(out, color, threshold);
+		iter++;
+	}
+
+	return out;
+}
+
+/*
+all pixels that have a non-transparent neighbor in at least three directions get filled with a weighted
+average of all nearest neighbor's color.
+*/
+ImageProcessor.fillGaps = (data) => {
+	let out = ImageProcessor.copy(data);
+
+	const GAP_TOL = 5; //distance to solid neighbors to fill gaps.
+	
+	const getPixelAlpha = (data, x, y) => {
+		return data.data[(x + y * data.width) * 4 + 3];
+	}
+
+	//!! calling this with dx=0 and dy=0 will result in an infinite loop.
+	const scan = (data, sx, sy, dx, dy, tol) => {
+		let x = sx;
+		let y = sy;
+		for (i = 0; i < tol && x >= 0 && x < data.width && y >= 0 && y < data.height; i++) {
+			x += dx;
+			y += dy;
+			if (getPixelAlpha(data, x, y) > 0) {
+				return [x, y];
+			}
+		}
+		return -1;
+	}
+
+	const fillDirections = [
+		[0, 1],
+		[0, -1],
+		[1, 0],
+		[-1, 0],
+		[1, 1],
+		[-1, -1],
+		[1, -1],
+		[-1, 1]
+
+	];
+
+	for (let x = 0; x < data.width; x++) {
+		for (let y = 0; y < data.height; y++) {
+			if (getPixelAlpha(data, x, y) != 0) {
+				continue;
+			}
+			const valid = [];
+			for (let i = 0; i < fillDirections.length; i++) {
+				const res = scan(data, x, y, ...fillDirections[i], GAP_TOL);
+				if (res != -1) {
+					valid.push(res);
+				}
+			}
+			if (valid.length >= 5) {
+				//set pixel to average of px colors
+				let newColor = [0, 0, 0, 0];
+				valid.forEach(v => {
+					const p = ImageProcessor.getPixel(data, ...v);
+					p.forEach((v, i) => newColor[i] += v);
+				});
+				newColor = newColor.map(v => Math.floor(v/valid.length));
+				ImageProcessor.setPixel(out, x, y, newColor);
 			}
 		}
 	}
@@ -204,11 +331,11 @@ Gets the value of a function (represented as an array of points) at a specific X
 ImageProcessor.getFnValue = (points, x) => {
 	let lowerBound = 0;
 
-	while (lowerBound < points.length && points[lowerBound + 1][0] < x) {
+	while (lowerBound < points.length-1 && points[lowerBound + 1][0] < x) {
 		lowerBound++;
 	}
 
-	if (lowerBound == 0 || lowerBound == points.length) return points[lowerBound][1];
+	if (lowerBound == 0 || lowerBound == points.length-1) return points[lowerBound][1];
 
 	const slope = (points[lowerBound+1][1]-points[lowerBound][1])/(points[lowerBound+1][0]-points[lowerBound][0]);
 	const linear = (x) => slope * (x - points[lowerBound][0]) + points[lowerBound][1];
@@ -275,7 +402,7 @@ ImageProcessor.isSquare = (maxima) => {
 	// looking for exactly 4 maxima about 90 degrees (pi/2 radians) apart, about the same height.
 	const VALUE_TOLERANCE = 0.2
 	const ANGLE_TOLERANCE = Math.PI / 12;
-	const ANGLE_GAP = Math.PI / 2
+	const ANGLE_GAP = Math.PI / 2;
 
 	if (maxima.length != 4) return false;
 
@@ -324,7 +451,6 @@ ImageProcessor.getTileColors = (image, f, n=3) => {
 	return colors;
 }
 ImageProcessor.sampleRegion = (image, f, u, v, deltau, deltav, n=25) => {
-	console.log(image.width, image.height);
 	let r = 0;
 	let g = 0;
 	let b = 0;
