@@ -1,8 +1,39 @@
-const ImageProcessor = {};
+const ImageProcessor = {
+	SCALE_PX: 200,
+	COLOR_THRESH: 70,
+	BG_SCAN_THICKNESS: 5,
+	N_SCAN_STEPS: 90
+};
 
 //attempts to process the given image data as a picture of a rubik's cube face.
 ImageProcessor.process = (data) => {
-	
+	const img = ImageProcessor.fillGaps(
+		ImageProcessor.removeBackground(
+			ImageProcessor.scale(
+				data, ImageProcessor.SCALE_PX
+			),
+			ImageProcessor.BG_SCAN_THICKNESS, ImageProcessor.COLOR_THRESH 
+		)
+	);
+	const center = ImageProcessor.findCenter(img);
+	const maxima = ImageProcessor.getMaxima(
+		ImageProcessor.smoothData(
+			ImageProcessor.scanShape(img, center, ImageProcessor.N_SCAN_STEPS)
+		)
+	);
+	if (!ImageProcessor.isSquare(maxima)) {
+		return "";
+	}
+	return ImageProcessor.mapToLetters(
+		ImageProcessor.getTileColors(
+			img,
+			ImageProcessor.getSquareFunction(
+				ImageProcessor.polarToCartesian(maxima, center)
+			)
+		),
+		ImageProcessor.trainingData
+	);
+
 }
 
 //scales an image to be targetWidth pixels wide.
@@ -156,7 +187,7 @@ average of all nearest neighbor's color.
 ImageProcessor.fillGaps = (data) => {
 	let out = ImageProcessor.copy(data);
 
-	const GAP_TOL = 5; //distance to solid neighbors to fill gaps.
+	const GAP_TOL = 10; //distance to solid neighbors to fill gaps.
 	
 	const getPixelAlpha = (data, x, y) => {
 		return data.data[(x + y * data.width) * 4 + 3];
@@ -258,13 +289,13 @@ ImageProcessor.scanShape = (data, center, n) => {
 
 	for (let theta = 0; theta < 2*Math.PI; theta += thetaStep) {
 		let dist = 0
-		for (let r = maxRadius; r >= 0; r--) {
+		for (let r = 0; r <= maxRadius; r++) {
 			const x = Math.floor(Math.cos(theta) * r + center[0]);
 			const y = Math.floor(Math.sin(theta) * r + center[1]);
 
 			const a = ImageProcessor.getPixel(data, x, y)[3];
 
-			if (a == 255) {
+			if (a != 255) {
 				dist = r;
 				break;
 			}
@@ -379,7 +410,7 @@ ImageProcessor.getMaxima = (points) => {
 			maxima.push([extrema[i][0], ImageProcessor.getFnValue(points, extrema[i][0])]);
 		}
 	}
-
+	//maybe only look at 4 largest maxima?
 	return maxima;
 }
 
@@ -397,6 +428,8 @@ ImageProcessor.polarToCartesian = (points, center) => {
 
 /*
 returns true if the image is a square, and false otherwise.
+
+TODO: make a more optimistic determination function that passes all images that might potentially be square
 */
 ImageProcessor.isSquare = (maxima) => {
 	// looking for exactly 4 maxima about 90 degrees (pi/2 radians) apart, about the same height.
@@ -476,7 +509,7 @@ An implementation of the K-nearest neighbors algorithm with k=1. cmap is a 2d ar
 ImageProcessor.mapToLetters = (colorList, cmap) => {
 
 	return colorList.map(v => {
-		let minDist = 255;
+		let minDist = 450;
 		let minIdx = 0;
 		for (let i = 0; i < cmap.length; i++) {
 			const comp = cmap[i];

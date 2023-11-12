@@ -56,8 +56,8 @@ function showImageData(data, target="c") {
 takes an ImageData object and runs it through the cube detection process.
 */
 function display(data) {
-	const SCALE_PX = 80;
-	const COLOR_THRESH = 50;
+	const SCALE_PX = 200;
+	const COLOR_THRESH = 70;
 	const original = data;
 	const scaled = ImageProcessor.scale(original, SCALE_PX);
 
