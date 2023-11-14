@@ -1,19 +1,55 @@
 const ImageProcessor = {
-	SCALE_PX: 200,
-	COLOR_THRESH: 70,
-	BG_SCAN_THICKNESS: 5,
-	N_SCAN_STEPS: 90
+	SCALE_PX: 200, //image is scaled down to this width in pixels
+	COLOR_THRESH: 70, //used by background remover. Difference in color channels less than COLOR_THRESH are considered matching
+	BG_SCAN_THICKNESS: 5, //pixel thickness of region around border used to calculate background color.
+	N_SCAN_STEPS: 90, // number of scan steps used by shape detection algorithm
+	SCALE_SAMPLE_DENSITY: 0.1, // fraction of total pixels sampled in each region when scaling down an image.
+	BG_MAX_ITER: 5, // Number of iterations of removing the found background color from the image.
+	GAP_TOL: 10, //Number of pixels in each direction to reach a solid pixel in order to backfill
+	VALUE_TOLERANCE = 0.2, //square detection. fractional tolerance of corner distance from center
+	ANGLE_TOLERANCE = Math.PI / 12, //square detection. absolute difference between two corners must be within this value of ANGLE_GAP
+	ANGLE_GAP = Math.PI / 2, // square detection. ideal angle between corners
+	TILE_N_SAMPLES = 25 // number of pixels sampled from the square to determine each tile's color
 };
 
 //attempts to process the given image data as a picture of a rubik's cube face.
 ImageProcessor.process = (data) => {
+	/*
+	ALGORITHM EXPLANATION
+	1. Scale the image down to a width of SCALE_PX pixels.
+		This is done for two reasons. First, smoothing pixel colors makes it easier to remove the background.
+		Second, scaling down the image makes processing faster.
+	2. Remove the background from the image.
+		An iterative process. The average color of a BG_SCAN_THICKNESS border around the image is found. Any pixels
+		within COLOR_THRESH of the background color are removed. This process is repeated until there are no solid
+		pixels left in the border or we reach BG_MAX_ITER iterations.
+		I chose this algorithm because it is simple and easy to implement, but works on any solid-colored and most
+		textured backgrounds. 
+	3. Fill gaps in the remaining solid portion of the image that were removed in step 2
+		Any transparent pixels that are within GAP_TOL of a solid color pixel in at least 2 cardinal directions
+		are filled with a color that is a weighted average of those neighbors.
+		In order for the shape scanner (step 5) to work correctly, the opaque image region must be continuous.
+	4. Find the center of the image.
+		Take the x and y coordinate of every solid pixel and average them. The center is used when scanning the
+		shape of the image.
+	5. Scan the shape of the image.
+		Move radially about the center. At each sampled angle, find the distance to reach a transparent pixel.
+		Since cubes can be rotated arbitrarily, this radial scan makes it easier to identify corners.
+	6. Get the maxima (corners) from the shape.
+		Calculus :). Take the first and second derivative. return all points where the first derivative is zero,
+		and the second derivative is negative. These correspond to local maxima, which represent corners.
+	7. Check if the shape we found is a square. If it is, continue, if not, end here and return an empty string.
+	8. Get the tile colors from the square face.
+		Split the square region found into thirds with respect to the x and y axis. Find the average color
+		of each of those 9 regions. Returns them as a 1d array in "reading order", top left to bottom right.
+	9. Feed each colors into the KNN model, and return the corresponding facelet letter.
+		The output is a 9-letter facelet string representing that face
+	*/
 	const img = ImageProcessor.fillGaps(
 		ImageProcessor.removeBackground(
-			ImageProcessor.scale(
-				data, ImageProcessor.SCALE_PX
-			),
-			ImageProcessor.BG_SCAN_THICKNESS, ImageProcessor.COLOR_THRESH 
-		)
+			ImageProcessor.scale(data, ImageProcessor.SCALE_PX),
+			ImageProcessor.BG_SCAN_THICKNESS, 
+			ImageProcessor.COLOR_THRESH)
 	);
 	const center = ImageProcessor.findCenter(img);
 	const maxima = ImageProcessor.getMaxima(
@@ -26,19 +62,19 @@ ImageProcessor.process = (data) => {
 	}
 	return ImageProcessor.mapToLetters(
 		ImageProcessor.getTileColors(
-			img,
+			img, 
 			ImageProcessor.getSquareFunction(
 				ImageProcessor.polarToCartesian(maxima, center)
 			)
 		),
 		ImageProcessor.trainingData
-	);
+	).join("");
 
 }
 
 //scales an image to be targetWidth pixels wide.
 ImageProcessor.scale = (data, targetWidth) => {
-	const DENSITY = 0.1;
+	const DENSITY = ImageProcessor.SCALE_SAMPLE_DENSITY;
 
 	const compressionRatio = data.width / targetWidth;
 
@@ -170,7 +206,7 @@ ImageProcessor.filterColorRegions = (data, colorMatch, threshold) => {
 ImageProcessor.removeBackground = (data, thickness, threshold) => {
 	let out = ImageProcessor.copy(data);
 	let iter = 0;
-	const MAX_ITER = 5;
+	const MAX_ITER = ImageProcessor.BG_MAX_ITER;
 	while (ImageProcessor.getBorderAlpha(out, thickness) > 0 && iter < MAX_ITER) {
 		const color = ImageProcessor.getBackgroundColor(out, thickness);
 		out = ImageProcessor.filterColorRegions(out, color, threshold);
@@ -187,7 +223,7 @@ average of all nearest neighbor's color.
 ImageProcessor.fillGaps = (data) => {
 	let out = ImageProcessor.copy(data);
 
-	const GAP_TOL = 10; //distance to solid neighbors to fill gaps.
+	const GAP_TOL = ImageProcessor.GAP_TOL; //distance to solid neighbors to fill gaps.
 	
 	const getPixelAlpha = (data, x, y) => {
 		return data.data[(x + y * data.width) * 4 + 3];
@@ -295,7 +331,7 @@ ImageProcessor.scanShape = (data, center, n) => {
 
 			const a = ImageProcessor.getPixel(data, x, y)[3];
 
-			if (a != 255) {
+			if (a !== 255) {
 				dist = r;
 				break;
 			}
@@ -410,7 +446,7 @@ ImageProcessor.getMaxima = (points) => {
 			maxima.push([extrema[i][0], ImageProcessor.getFnValue(points, extrema[i][0])]);
 		}
 	}
-	//maybe only look at 4 largest maxima?
+	//maybe only look at 4 most extreme (in terms of second derivative value) maxima
 	return maxima;
 }
 
@@ -433,9 +469,9 @@ TODO: make a more optimistic determination function that passes all images that 
 */
 ImageProcessor.isSquare = (maxima) => {
 	// looking for exactly 4 maxima about 90 degrees (pi/2 radians) apart, about the same height.
-	const VALUE_TOLERANCE = 0.2
-	const ANGLE_TOLERANCE = Math.PI / 12;
-	const ANGLE_GAP = Math.PI / 2;
+	const VALUE_TOLERANCE = ImageProcessor.VALUE_TOLERANCE;
+	const ANGLE_TOLERANCE = ImageProcessor.ANGLE_TOLERANCE;
+	const ANGLE_GAP = ImageProcessor.ANGLE_GAP;
 
 	if (maxima.length != 4) return false;
 
@@ -478,7 +514,7 @@ ImageProcessor.getTileColors = (image, f, n=3) => {
 	const colors = [];
 	for (let v = 0; v < 1; v += 1/n) {
 		for (let u = 0; u < 1; u += 1/n) {
-			colors.push(ImageProcessor.sampleRegion(image, f, u, v, 1/n, 1/n));
+			colors.push(ImageProcessor.sampleRegion(image, f, u, v, 1/n, 1/n, ImageProcessor.TILE_N_SAMPLES));
 		}
 	}
 	return colors;
