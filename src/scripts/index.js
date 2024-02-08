@@ -23,6 +23,24 @@ function blobToImageData(blob) {
 	});
 }
 
+function showImageData(data, target="c") {
+	const c = document.getElementById(target);
+	c.width = data.width;
+	c.height = data.height;
+	const ctx = c.getContext("2d");
+	createImageBitmap(data)
+		.then(img => {
+			ctx.drawImage(img, 0, 0);
+		});
+
+	return ctx;
+}
+
 function handle(data) {
-	console.log(ImageProcessor.process(data))
+	const parsed = ImageProcessor.process(data).toUpperCase();
+	showImageData(data);
+	console.log(parsed)
+	document.getElementById("output-r1").innerText = parsed.substring(0, 3).split('').join(' ');
+	document.getElementById("output-r2").innerText = parsed.substring(3, 6).split('').join(' ');
+	document.getElementById("output-r3").innerText = parsed.substring(6).split('').join(' ');
 }

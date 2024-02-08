@@ -1,3 +1,7 @@
+@font-face {
+	font-family: RobotoMono;
+	src: url("../assets/RobotoMono-Regular.ttf");
+}
 body {
 	margin: 1rem;
 	display: flex;
@@ -5,6 +9,7 @@ body {
 	align-items: flex-start;
 	justify-content: space-evenly;
 	flex-wrap: wrap;
+	font-family: RobotoMono;
 }
 .img-display {
 	width: 10%;
@@ -13,4 +18,7 @@ body {
 }
 .text-output {
 	width: 100%;
+}
+h1 {
+	margin: 0;
 }
