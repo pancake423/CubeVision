@@ -22,3 +22,7 @@ body {
 h1 {
 	margin: 0;
 }
+
+#vis {
+	border: 1px solid black;
+}

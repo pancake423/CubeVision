@@ -64,19 +64,26 @@ FaceJoiner.checkValidInput = (arr) => {
 }
 
 //re-order faces so that the centers are correct.
+//White -> Orange -> Green -> Red -> Blue -> Yellow
 FaceJoiner.orderFaces = (arr) => {
-
+	const findFace = (s, arr) => {
+		for (const f of arr) {
+			if (f[4] == s) {
+				return f;
+			}
+		}
+	};
+	const order = ["w", "o", "g", "r", "b", "y"];
+	return order.map(f => findFace(f, arr));
 }
 
 //rotate the passed face string 90 degrees clockwise.
 FaceJoiner.rotateFace = (f) => {
-	if (f.length !== 9) throw Error(`invalid face string "${f}"`);
 	return f[6] + f[3] + f[0] + f[7] + f[4] + f[1] + f[8] + f[5] + f[2];
 }
 
 
 FaceJoiner.permute = (arr) => {
-	if (arr.length !== 6) throw Error(`invalid face array "${arr}"`);
 	return arr.map(f => {
 		const r1 = FaceJoiner.rotateFace(f);
 		const r2 = FaceJoiner.rotateFace(r1);
