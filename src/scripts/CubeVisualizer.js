@@ -9,6 +9,15 @@ class CubeVis {
 		[-1, 1, -1],
 		[-1, -1, -1],
 	];
+	//order: up, left, front, right, back, down
+	static faces = [
+		[7, 5, 3],
+		[7, 3, 6],
+		[3, 1, 2],
+		[1, 5, 0],
+		[5, 7, 4],
+		[2, 0, 6]
+	];
 	static colors = {
 		"r": "rgb(255, 0, 0)",
 		"g": "rgb(0, 255, 0)",
@@ -21,7 +30,19 @@ class CubeVis {
 	static zShiftFactor = 0.1;
 
 	static to2D(x, y, z) {
-		return [x * (1 + z * CubeVis.zScaleFactor), y * (1 + z * CubeVis.zScaleFactor) + CubeVis.zShiftFactor*z];
+		return [x * (1 + z * CubeVis.zScaleFactor), y * (1 + z * CubeVis.zScaleFactor) - CubeVis.zShiftFactor*z];
+	}
+
+	static vecSub(v1, v2) {
+		return v1.map((c, i) => c - v2[i]);
+	}
+
+	static vecAdd(v1, v2) {
+		return v1.map((c, i) => c + v2[i]);
+	}
+
+	static vecMult(v, n) {
+		return v.map(c => c * n);
 	}
 
 	constructor(canvas, faceData) {
@@ -81,9 +102,44 @@ class CubeVis {
 
 		//interpolate beween corners to get the positions of the cubies
 		//translate to 2D, order by z-index, render.
-
+		const cubies = []
+		CubeVis.faces.forEach((f, i) => {
+			cubies.concat(this.getCubies(f.map(c => corners[c]), this.data[i]));
+		});
+		console.log(cubies);
+		//TODO: sort cubies by z index, render.
 
 		if (this.active) requestAnimationFrame(draw);
+	}
+	getCubies(cornerList, data) {
+		// corner order: top left, top right, bottom left, [bottom right.]
+		// data is a 9-character face string.
+		const start = cornerList[0];
+		const horiz = CubeVis.vecSub(cornerList[1] - start);
+		const vert = CubeVis.vecSub(cornerList[2] - start);
+
+		out = []
+
+		for (let i = 0; i < 9; i++) {
+			const x = i % 3;
+			const y = Math.floor(i / 3);
+			const color = data[i];
+
+			let points = [
+				[x, y],
+				[x + 1, y],
+				[x + 1, y + 1],
+				[x, y + 1]
+			];
+
+			points = points.map(p => 
+				CubeVis.vecAdd(CubeVis.vecAdd(start, CubeVis.vecMult(horiz, p[0] / 3)), CubeVis.vecMult(vert, p[1] / 3))
+			);
+
+			points = points.map(p => CubeVis.to2D(p));
+			out.append([points, color]);
+		}
+		return out;
 	}
 	drawCubie(points, color) {
 		this.ctx.beginPath();
