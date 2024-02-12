@@ -9,6 +9,14 @@ class CubeVis {
 		[-1, 1, -1],
 		[-1, -1, -1],
 	];
+	static colors = {
+		"r": "rgb(255, 0, 0)",
+		"g": "rgb(0, 255, 0)",
+		"b": "rgb(0, 0, 255)",
+		"o": "rgb(255, 128, 0)",
+		"y": "rgb(255, 255, 0)",
+		"w": "rgb(255, 255, 255)"
+ 	}
 	static zScaleFactor = 0.01;
 	static zShiftFactor = 0.1;
 
@@ -78,7 +86,13 @@ class CubeVis {
 		if (this.active) requestAnimationFrame(draw);
 	}
 	drawCubie(points, color) {
-
+		this.ctx.beginPath();
+		this.ctx.fillStyle = CubeVis.colors[color];
+		this.ctx.moveTo(...points[points.length-1]);
+		for (const p of points) {
+			this.ctx.lineTo(...p);
+		}
+		this.ctx.fill();
 	}
 
 	translate(x, y, z) {
