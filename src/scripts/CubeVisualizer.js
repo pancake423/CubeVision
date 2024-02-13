@@ -24,13 +24,14 @@ class CubeVis {
 		"b": "rgb(0, 0, 255)",
 		"o": "rgb(255, 128, 0)",
 		"y": "rgb(255, 255, 0)",
-		"w": "rgb(255, 255, 255)"
+		"w": "rgb(255, 255, 255)",
+		"k": "rgb(50, 50, 50)"
  	}
-	static zScaleFactor = 0.01;
-	static zShiftFactor = 0.1;
+	static zScaleFactor = 0.001;
+	static zShiftFactor = 0.25;
 
 	static to2D(x, y, z) {
-		return [x * (1 + z * CubeVis.zScaleFactor), y * (1 + z * CubeVis.zScaleFactor) - CubeVis.zShiftFactor*z];
+		return [x * (1 + z * CubeVis.zScaleFactor), y * (1 + z * CubeVis.zScaleFactor) + z*CubeVis.zShiftFactor, z];
 	}
 
 	static vecSub(v1, v2) {
@@ -46,13 +47,17 @@ class CubeVis {
 	}
 
 	constructor(canvas, faceData) {
-		FaceJoiner.checkValidInput(faceData);
+		// Should this be opinionated?
+		// FaceJoiner.checkValidInput(faceData);
 		this.data = faceData;
 		this.canvas = canvas;
 		this.ctx = canvas.getContext("2d");
-		this.rotXZ = 0;
-		this.rotYZ = 0;
-		this.radius = Math.min(canvas.width, canvas.height) / 3;
+		this.ctx.strokeStyle = "rgb(0, 0, 0)";
+		this.ctx.lineWidth = Math.min(canvas.width, canvas.height) * 0.01;
+		this.ctx.lineJoin = "round";
+		this.rotXZ = -0.64;
+		this.rotYZ = -0.27;
+		this.radius = Math.min(canvas.width, canvas.height) * 0.2;
 		this.keys = {
 			"left": false,
 			"right": false,
@@ -97,28 +102,42 @@ class CubeVis {
 		if (this.keys.up) this.rotYZ += 0.01;
 		if (this.keys.down) this.rotYZ -= 0.01;
 
+		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
 		//translate corners from default position to rotated/scaled position
 		const corners = CubeVis.corners.map(c => this.translate(...c));
 
 		//interpolate beween corners to get the positions of the cubies
 		//translate to 2D, order by z-index, render.
-		const cubies = []
+		let cubies = []
 		CubeVis.faces.forEach((f, i) => {
-			cubies.concat(this.getCubies(f.map(c => corners[c]), this.data[i]));
+			cubies = cubies.concat(this.getCubies(f.map(c => corners[c]), this.data[i]));
 		});
-		console.log(cubies);
 		//TODO: sort cubies by z index, render.
+		const avgZ = (l) => {
+			let tz = 0;
+			l.forEach(p => tz += p[2]);
+			return tz / l.length;
+		}
+		cubies.sort((a, b) => {
+			const aDepth = avgZ(a[0]);
+			const bDepth = avgZ(b[0]);
+			if (aDepth < bDepth) return -1;
+			else if (aDepth > bDepth) return 1;
+			return 0;
+		});
+		cubies.forEach(params => this.drawCubie(...params));
 
-		if (this.active) requestAnimationFrame(draw);
+		if (this.active) requestAnimationFrame(() => {this.draw()});
 	}
 	getCubies(cornerList, data) {
 		// corner order: top left, top right, bottom left, [bottom right.]
 		// data is a 9-character face string.
 		const start = cornerList[0];
-		const horiz = CubeVis.vecSub(cornerList[1] - start);
-		const vert = CubeVis.vecSub(cornerList[2] - start);
+		const horiz = CubeVis.vecSub(cornerList[1], start);
+		const vert = CubeVis.vecSub(cornerList[2], start);
 
-		out = []
+		const out = [];
 
 		for (let i = 0; i < 9; i++) {
 			const x = i % 3;
@@ -131,13 +150,11 @@ class CubeVis {
 				[x + 1, y + 1],
 				[x, y + 1]
 			];
-
 			points = points.map(p => 
 				CubeVis.vecAdd(CubeVis.vecAdd(start, CubeVis.vecMult(horiz, p[0] / 3)), CubeVis.vecMult(vert, p[1] / 3))
 			);
-
-			points = points.map(p => CubeVis.to2D(p));
-			out.append([points, color]);
+			points = points.map(p => CubeVis.vecAdd(CubeVis.to2D(...p), [this.canvas.width/2, this.canvas.height/2, 0]));
+			out.push([points, color]);
 		}
 		return out;
 	}
@@ -149,6 +166,7 @@ class CubeVis {
 			this.ctx.lineTo(...p);
 		}
 		this.ctx.fill();
+		this.ctx.stroke();
 	}
 
 	translate(x, y, z) {
@@ -160,8 +178,8 @@ class CubeVis {
 		outX = Math.cos(angle_xz + this.rotXZ) * dist_xz;
 		outZ = Math.sin(angle_xz + this.rotXZ) * dist_xz;
 
-		const dist_yz = Math.sqrt(y*y + z*z);
-		const angle_yz = Math.atan2(z, y);
+		const dist_yz = Math.sqrt(y*y + outZ*outZ);
+		const angle_yz = Math.atan2(outZ, y);
 		outY = Math.cos(angle_yz + this.rotYZ) * dist_yz;
 		outZ = Math.sin(angle_yz + this.rotYZ) * dist_yz;
 

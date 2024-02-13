@@ -1,5 +1,8 @@
 window.onload = () => {
 	document.querySelector("#file-input").onchange = handleFileUpload;
+	const v = document.getElementById("vis");
+	const cube = new CubeVis(v, ["kkkkkkkkk", "ooooooooo", "ggggggggg", "rrrrrrrrr", "bbbbbbbbb", "yyyyyyyyy"]);
+	cube.start();
 }
 
 function handleFileUpload(e) {
