@@ -77,19 +77,19 @@ class CubeVis {
 	}
 	update(keyCode, value) {
 		switch (keyCode) {
-		case 37:
+		case 65:
 			//left
 			this.keys.left = value;
 			break;
-		case 38:
+		case 87:
 			//up
 			this.keys.up = value;
 			break;
-		case 39:
+		case 68:
 			//right
 			this.keys.right = value;
 			break;
-		case 40:
+		case 83:
 			//down
 			this.keys.down = value;
 			break;

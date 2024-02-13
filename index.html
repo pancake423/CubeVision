@@ -3,17 +3,13 @@
 	<script src="src/scripts/ImageProcessor.js"></script>
 	<script src="src/scripts/FaceJoiner.js"></script>
 	<script src="src/scripts/CubeVisualizer.js"></script>
+	<script src="src/scripts/DataCollector.js"></script>
+	<script src="src/scripts/FaceVisualizer.js"></script>
 	<script src="src/scripts/index.js"></script>
 	<script src="src/scripts/KNNModelData.js"></script>
 </head>
 
 <body>
-	<input type="file" accept="image/*" id="file-input">
-	<canvas id="c" class="img-display"></canvas>
-	<div style="display: flex; flex-direction: column;">
-		<h1 id="output-r1"></h1>
-		<h1 id="output-r2"></h1>
-		<h1 id="output-r3"></h1>
-	</div>
+	<input type="file" accept="image/*" id="file-input" multiple>
 	<canvas id="vis" width=500 height=500></canvas>
 </body>

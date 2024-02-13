@@ -118,7 +118,7 @@ FaceJoiner.checkValidInput = (arr) => {
 		"y": 0
 	}
 	arr.forEach((f, i) => {
-		if (!(typeof f === 'string' || f instanceof String && f.length === 9)) {
+		if (!((typeof f === 'string' || f instanceof String) && f.length === 9)) {
 			throw Error(`FaceJoiner input, item ${i}: ${f} is not a string of length 9.`);
 		}
 		for (let n = 0; n < f.length; n++) {
