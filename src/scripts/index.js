@@ -9,6 +9,7 @@ window.onload = () => {
 
 function handleFileUpload(e) {
 	DataCollector.clear();
+	deleteFaces();
 	for (const file of e.srcElement.files) {
 		blobToImageData(file)
 		.then((data) => handle(data));
@@ -46,13 +47,14 @@ function showImageData(data, c) {
 function handle(data) {
 	const parsed = ImageProcessor.process(data);
 	const div = document.createElement("div");
+	div.className = "face-container";
 	const rawImg = document.createElement("canvas");
 	rawImg.className = "img-display";
 	const parsedImg = document.createElement("canvas");
 	parsedImg.className = "img-display";
 	div.appendChild(rawImg);
 	div.appendChild(parsedImg);
-	document.body.appendChild(div);
+	document.querySelector("#left").appendChild(div);
 	showImageData(data, rawImg);
 	const f = new FaceVis(parsedImg, parsed);
 	f.draw();
@@ -66,4 +68,8 @@ function checkAllFacesLoaded() {
 
 	const cubeData = FaceJoiner.join(data);
 	DataCollector.cube.data = cubeData;
+}
+
+function deleteFaces() {
+	document.querySelector("#left").innerHTML = "";
 }

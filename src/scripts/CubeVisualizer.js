@@ -27,8 +27,11 @@ class CubeVis {
 		"w": "rgb(255, 255, 255)",
 		"k": "rgb(50, 50, 50)"
  	}
+ 	static speed = 0.02;
+
 	static zScaleFactor = 0.001;
 	static zShiftFactor = 0.25;
+
 
 	static to2D(x, y, z) {
 		return [x * (1 + z * CubeVis.zScaleFactor), y * (1 + z * CubeVis.zScaleFactor) + z*CubeVis.zShiftFactor, z];
@@ -97,10 +100,10 @@ class CubeVis {
 	}
 	draw() {
 		//update rotation based on key presses
-		if (this.keys.left) this.rotXZ += 0.01;
-		if (this.keys.right) this.rotXZ -= 0.01;
-		if (this.keys.up) this.rotYZ += 0.01;
-		if (this.keys.down) this.rotYZ -= 0.01;
+		if (this.keys.left) this.rotXZ += CubeVis.speed;
+		if (this.keys.right) this.rotXZ -= CubeVis.speed;
+		if (this.keys.up) this.rotYZ += CubeVis.speed;
+		if (this.keys.down) this.rotYZ -= CubeVis.speed;
 
 		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
