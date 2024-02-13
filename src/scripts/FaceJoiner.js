@@ -2,7 +2,56 @@
 Second part of the alrgorithm- figuring out how to join the six faces together into a valid cube.
 */
 
-const FaceJoiner = {}
+// White -> Orange -> Green -> Red -> Blue -> Yellow
+const FaceJoiner = {
+	edges: {
+		"wg": 1,
+		"wo": 1,
+		"wr": 1,
+		"wb": 1,
+		"gy": 1,
+		"oy": 1,
+		"ry": 1,
+		"by": 1,
+		"rb": 1,
+		"ob": 1,
+		"og": 1,
+		"gr": 1,
+	},
+	corners: {
+		"wog": 1,
+		"wgr": 1,
+		"wrb": 1,
+		"wob": 1,
+		"ogy": 1,
+		"gry": 1,
+		"rby": 1,
+		"oby": 1,
+	},
+
+	pieces: [
+		[[0, 0], [1, 0], [4, 2]],
+		[[0, 1], [4, 1]],
+		[[0, 2], [4, 0], [3, 2]],
+		[[0, 3], [1, 1]],
+		[[0, 5], [3, 1]],
+		[[0, 6], [1, 2], [2, 0]],
+		[[0, 7], [2, 1]],
+		[[0, 8], [2, 2], [3, 0]],
+		[[1, 5], [2, 3]],
+		[[2, 5], [3, 3]],
+		[[3, 5], [4, 3]],
+		[[4, 5], [1, 3]],
+		[[5, 0], [1, 8], [2, 6]],
+		[[5, 1], [2, 7]],
+		[[5, 2], [2, 8], [3, 6]],
+		[[5, 3], [1, 7]],
+		[[5, 5], [3, 7]],
+		[[5, 6], [1, 6], [4, 8]],
+		[[5, 7], [4, 7]],
+		[[5, 8], [3, 8], [4, 6]]
+	]
+}
 
 FaceJoiner.join = (arr) => {
 	/*
@@ -11,6 +60,33 @@ FaceJoiner.join = (arr) => {
 	configuration.
 	*/
 	FaceJoiner.checkValidInput(arr);
+	const faces = FaceJoiner.orderFaces(arr);
+	const facePerms = FaceJoiner.permute(faces);
+
+	valid = [];
+	for (let i = 0; i < Math.pow(4, 6); i++) {
+		const p = FaceJoiner.getPermutation(i, facePerms);
+		if (FaceJoiner.checkPermutation(p)) FaceJoiner.appendIfNotDuplicate(valid, p);
+	}
+
+	if (valid.length != 1) {
+		console.log(valid);
+		throw Error("Invalid number of permutations found!");
+	}
+
+	return valid[0];
+}
+
+FaceJoiner.appendIfNotDuplicate = (array, item) => {
+	const itemStr = JSON.stringify(item);
+	for (const i of array) {
+		const str = JSON.stringify(i);
+		if (str === itemStr) {
+			return false;
+		}
+	}
+	array.push(item);
+	return true;
 }
 
 /*
@@ -97,12 +173,48 @@ FaceJoiner.getPermutation = (n, opts) => {
 	let idx = n;
 	const out = [];
 	for (const opt of opts) {
-		out.append(opt[idx % opts.length]);
-		idx = Math.floor(idx / opts.length);
+		out.push(opt[idx % opt.length]);
+		idx = Math.floor(idx / opt.length);
 	}
 	return out;
 }
 
-FaceJoiner.checkPermutation = (arr) => {
+FaceJoiner.checkPermutation = (arr, verbose=false) => {
+	// step1: count all the pieces, make sure there is one of each
+	// step2: if needed, check parity? (corner parity, edge parity, overall parity).
+	// I think step 2 is unnecessary which is great news :)
+	const piecesFound = {};
+	for (const coords of FaceJoiner.pieces) {
+		const tiles = [];
+		for (const loc of coords) {
+			const color = arr[loc[0]][loc[1]];
+			if (tiles.includes(color)) {
+				if (verbose) console.log("Invalid permutation. duplicate tile colors.")
+				return false;
+			}
+			tiles.push(color);
+		}
+		const pieceString = FaceJoiner.getPieceString(tiles);
+		if (piecesFound[pieceString] !== undefined) {
+			if (verbose) console.log("Invalid permutation. duplicate piece.")
+			return false;
+		}
+		if (FaceJoiner.corners[pieceString] === undefined && FaceJoiner.edges[pieceString] === undefined) {
+			if (verbose) console.log("Invalid permutation. invalid piece", pieceString);
+			return false;
+		}
+		piecesFound[pieceString] = 1;
+	}
+	return true;
 
+}
+
+FaceJoiner.getPieceString = (letters) => {
+	const present = (v) => letters.includes(v) ? v : "";
+	const ord = ["w", "o", "g", "r", "b", "y"];
+	let out = "";
+	for (const c of ord) {
+		out += present(c);
+	}
+	return out;
 }
