@@ -95,7 +95,6 @@ has the correct number of each color tile, and one of each center.
 
 returns nothing, but raises a descriptive error if the input is invalid.
 */
-
 FaceJoiner.checkValidInput = (arr) => {
 	//check format
 	if (!(arr instanceof Array && arr.length === 6)) {
@@ -159,6 +158,7 @@ FaceJoiner.rotateFace = (f) => {
 }
 
 
+//generate all four rotations of each face string. (array[6][4])
 FaceJoiner.permute = (arr) => {
 	return arr.map(f => {
 		const r1 = FaceJoiner.rotateFace(f);
@@ -169,6 +169,7 @@ FaceJoiner.permute = (arr) => {
 	})
 }
 
+//gets the nth permutation from the possible options. n can be from 0 to 4095 (4^6 possibilites)
 FaceJoiner.getPermutation = (n, opts) => {
 	let idx = n;
 	const out = [];
@@ -179,6 +180,7 @@ FaceJoiner.getPermutation = (n, opts) => {
 	return out;
 }
 
+//checks if the current permutation is valid. Returns a bool.
 FaceJoiner.checkPermutation = (arr, verbose=false) => {
 	// step1: count all the pieces, make sure there is one of each
 	// step2: if needed, check parity? (corner parity, edge parity, overall parity).
@@ -209,6 +211,7 @@ FaceJoiner.checkPermutation = (arr, verbose=false) => {
 
 }
 
+//converts an array of face tile colors into a single string (specific order).
 FaceJoiner.getPieceString = (letters) => {
 	const present = (v) => letters.includes(v) ? v : "";
 	const ord = ["w", "o", "g", "r", "b", "y"];
