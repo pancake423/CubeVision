@@ -1,0 +1,5 @@
+TODO:
+
+integrate with Brilliant Monocle
+offload solving/image processing to worker threads for better responsiveness
+improve image processor?

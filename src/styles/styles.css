@@ -34,3 +34,8 @@ h1 {
 #vis {
 	border: 1px solid black;
 }
+#solution {
+	position: absolute;
+	left: 1rem;
+	bottom: 1rem;
+}

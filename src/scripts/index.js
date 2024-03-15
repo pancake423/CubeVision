@@ -68,6 +68,8 @@ function checkAllFacesLoaded() {
 
 	const cubeData = FaceJoiner.join(data);
 	DataCollector.cube.data = cubeData;
+	const solution = Solver.solve(cubeData);
+	document.querySelector("#solution").innerText = `Solution: ${solution}`;
 }
 
 function deleteFaces() {
