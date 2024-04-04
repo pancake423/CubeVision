@@ -5,6 +5,14 @@ import camera
 import ui
 
 NOT_CONNECTED_BLINK_DELAY = 300 #ms
+IMG_STATUS = {
+    "red": False,
+    "orange": False,
+    "white": False,
+    "yellow": False,
+    "green": False,
+    "blue": False,
+}
 
 def main():
     ui.show_waiting_connect()
@@ -18,6 +26,7 @@ def main():
     led.off(led.RED)
     led.on(led.GREEN)
     bluetooth.receive_callback(image_processor_status_callback)
+    ui.show_capture_screen(IMG_STATUS, status="ready")
 
 def take_picture():
     camera.capture()
@@ -26,6 +35,5 @@ def take_picture():
 
 def image_processor_status_callback(data):
     pass
-
 
 main()
