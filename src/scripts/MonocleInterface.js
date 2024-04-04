@@ -12,8 +12,7 @@ class Monocle {
     static device;
     static async connect() {
         if (!navigator.bluetooth) {
-            return Promise.reject("This browser doesn't support WebBluetooth. " +
-                "Make sure you're on Chrome Desktop/Android or BlueFy iOS.")
+            return Promise.reject("This browser doesn't support WebBluetooth. ")
         }
         Monocle.device = await navigator.bluetooth.requestDevice({
             filters: [
@@ -47,6 +46,7 @@ class Monocle {
         })
     }
     static recieve(event) {
+        // data recieved will be bits of a jpg image
         console.log(event.target.value);
     }
 }
