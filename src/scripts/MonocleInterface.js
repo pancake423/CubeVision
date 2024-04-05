@@ -1,4 +1,5 @@
-// uses Web Browser's bluetooth module to connect to the Brilliant monocle and provide an interface for the program.
+// uses Web Browser's bluetooth module to connect to the Brilliant monocle and provide an interface 
+// to recieve images from the monocle and send cube data back to it.
 // very heavily borrows code from https://github.com/siliconwitchery/web-bluetooth-repl/blob/main/js/bluetooth.js
 const replDataServiceUuid = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 const nordicDfuServiceUuid = 0xfe59;
@@ -10,6 +11,13 @@ const rawDataTxCharacteristicUuid = "e5700003-7bac-429a-b4ce-57ff900f479d";
 
 class Monocle {
     static device;
+    static #imageData = [];
+    static #imageHandler = (data) => {console.log(data)}
+
+    static setImageHandler(fn) {
+        Monocle.#imageHandler = fn;
+    }
+
     static async connect() {
         if (!navigator.bluetooth) {
             return Promise.reject("This browser doesn't support WebBluetooth. ")
@@ -29,7 +37,7 @@ class Monocle {
         rawDataRxCharacteristic = await rawDataService.getCharacteristic(rawDataRxCharacteristicUuid);
         rawDataTxCharacteristic = await rawDataService.getCharacteristic(rawDataTxCharacteristicUuid);
         await rawDataTxCharacteristic.startNotifications();
-        rawDataTxCharacteristic.addEventListener('characteristicvaluechanged', Monocle.recieve);
+        rawDataTxCharacteristic.addEventListener('characteristicvaluechanged', Monocle.#recieve);
     }
     static async disconnect() {
         if (Monocle.device && Monocle.device.gatt.connected) {
@@ -45,8 +53,27 @@ class Monocle {
             return Promise.reject(error);
         })
     }
-    static recieve(event) {
+    static #recieve(event) {
         // data recieved will be bits of a jpg image
-        console.log(event.target.value);
+        const data = new Uint8Array(event.target.value.buffer);
+        if (data.length == 3 && data[0] === 101) {
+            // packet is "end", marking the end of image transmission.
+            const blob = new Blob(Monocle.#imageData, {type: "image/jpeg"});
+            Monocle.#blobToImageData(blob).then(imageData => Monocle.#imageHandler(imageData));
+            Monocle.#imageData = [];
+        } else {
+            Monocle.#imageData.push(data.buffer);
+        }
+    }
+    static #blobToImageData(blob) {
+        return createImageBitmap(blob)
+        .then((bitmap) => {
+            const c = new OffscreenCanvas(bitmap.width, bitmap.height);
+            const ctx = c.getContext("2d");
+    
+            ctx.drawImage(bitmap, 0, 0);
+    
+            return ctx.getImageData(0, 0, bitmap.width, bitmap.height);
+        });
     }
 }

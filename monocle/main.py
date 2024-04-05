@@ -6,6 +6,10 @@ import ui
 import touch
 
 NOT_CONNECTED_BLINK_DELAY = 300 #ms
+CAMERA_CAPTURE_DELAY = 100 #ms, time before camera data is sent
+CAMERA_READY_DELAY = 300 #ms, visual indicator of picture taken
+WAIT_SERVICE_BUSY_DELAY = 5 #ms
+
 IMG_STATUS = {
     "red": False,
     "orange": False,
@@ -37,11 +41,28 @@ def handle_image_processor_data(data):
     # image processing failure, or cube string.
     pass
 
-def handle_camera_button():
+def send_data(data):
+    while True:
+        try:
+            bluetooth.send(data)
+        except OSError:
+            time.sleep_ms(WAIT_SERVICE_BUSY_DELAY)
+            continue
+        break
+
+def handle_camera_button(button):
     # take a picture and transmit the data to the browser
-    ui.show_capture_screen(IMG_STATUS, status="processing...")
+    ui.show_capture_screen(IMG_STATUS, status="sending...")
     camera.capture()
+    # image sending code from https://github.com/milesprovus/Monocle-QR-Reader/blob/main/main.py
+    # apparently the best solution is to just ignore the "Raw data service is busy" error.
+    time.sleep_ms(CAMERA_CAPTURE_DELAY)
+    led.off(led.GREEN)
     while data := camera.read(bluetooth.max_length()):
-        bluetooth.send(data)
+        send_data(data)
+    send_data("end")
+    time.sleep_ms(CAMERA_READY_DELAY)
+    led.on(led.GREEN)
+    ui.show_capture_screen(IMG_STATUS, status="processing...")
 
 main()

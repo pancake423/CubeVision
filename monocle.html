@@ -1,4 +1,19 @@
 <head>
     <script src="src/scripts/MonocleInterface.js"></script>
+    <script>
+        var c;
+        var ctx;
+        window.onload = () => {
+            c = document.querySelector("#c");
+            ctx = c.getContext("2d");
+            Monocle.setImageHandler(handleImage);
+        }
+        function handleImage(data) {
+            console.log(data);
+            ctx.putImageData(data, 0, 0);
+        }
+    </script>
 </head>
-<body></body>
+<body>
+    <canvas id="c" width="640" height="400"></canvas>
+</body>
