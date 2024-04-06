@@ -36,6 +36,22 @@ function handleImage(data) {
     // figure out if parsed successfully
     // add row to table page
     // send response to monocle
-    console.log(parsed);
-    Monocle.transmit("test");
+    if (parsed === "") {
+        // image processing failed
+        makeTableRow(data, "Invalid", "kkkkkkkkk");
+        Monocle.transmit("fail");
+    } else {
+        // image processing success
+        const colorMap = {
+            "r": "Red",
+            "g": "Green",
+            "b": "Blue",
+            "o": "Orange",
+            "w": "White",
+            "y": "Yellow"
+        }
+        const faceColor = colorMap[parsed[4]];
+        makeTableRow(data, `${faceColor} face scanned.`, parsed);
+        Monocle.transmit(faceColor.toLowerCase());
+    }
 }

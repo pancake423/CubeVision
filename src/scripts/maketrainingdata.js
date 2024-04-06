@@ -96,7 +96,7 @@ function generate() {
 	if (COLOR_LIST.length == 0) {console.log("Error: no image uploaded"); return}
 	let colorString = document.querySelector("#cube-string").value;
 
-	stringOutput = "[";
+	stringOutput = "";
 	COLOR_LIST.forEach((color, i) => {
 		stringOutput += "["
 		color.forEach(channel => {
@@ -106,7 +106,7 @@ function generate() {
 		if (i != COLOR_LIST.length - 1) stringOutput += ", ";
 		stringOutput += "";
 	});
-	stringOutput += "],\n"
+	stringOutput += ",\n"
 
 	document.getElementById("text-output").innerText+=stringOutput;
 
@@ -116,12 +116,12 @@ function generate() {
 
 function drawColors(colorList) {
 	const c = document.getElementById("c3");
-	c.width = 3;
-	c.height = 3;
+	c.width = 300;
+	c.height = 300;
 	const ctx = c.getContext("2d");
 	colorList.forEach((v, i) => {
 		ctx.fillStyle = `rgb(${v[0]}, ${v[1]}, ${v[2]})`;
-		ctx.fillRect(i%3, Math.floor(i/3), 1, 1);
+		ctx.fillRect(i%3 * 100, Math.floor(i/3) * 100, 100, 100);
 	});
 
 	return ctx;

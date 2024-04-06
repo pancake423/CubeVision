@@ -31,18 +31,30 @@ def main():
 
     led.off(led.RED)
     led.on(led.GREEN)
-    bluetooth.receive_callback(handle_image_processor_data)
+    bluetooth.receive_callback(handle_response_data)
     touch.callback(touch.A, handle_camera_button)
     ui.show_capture_screen(img_status, status="ready")
 
 
-def handle_image_processor_data(data):
+def handle_response_data(data):
     # handle data from pc back to monocle.
     # either saying which side was found,
     # image processing failure, or cube string.
     global camera_ready
-    res = str(data)
-    ui.show_capture_screen(img_status, status=res)
+    res = data.decode() # convert binary string into normal string
+
+    if len(res) > 10:
+        # TODO: implement next screen.
+        # message is either cube data or solution data.
+        return
+
+    if res in img_status:
+        # image processing success
+        img_status[res] = True
+        ui.show_capture_screen(img_status, status="ready")
+    else:
+        ui.show_capture_screen(img_status, status="invalid image.")
+
     camera_ready = True
 
 def send_data(data):
