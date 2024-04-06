@@ -10,7 +10,8 @@ CAMERA_CAPTURE_DELAY = 100 #ms, time before camera data is sent
 CAMERA_READY_DELAY = 300 #ms, visual indicator of picture taken
 WAIT_SERVICE_BUSY_DELAY = 5 #ms
 
-IMG_STATUS = {
+camera_ready = True
+img_status = {
     "red": False,
     "orange": False,
     "white": False,
@@ -32,16 +33,21 @@ def main():
     led.on(led.GREEN)
     bluetooth.receive_callback(handle_image_processor_data)
     touch.callback(touch.A, handle_camera_button)
-    ui.show_capture_screen(IMG_STATUS, status="ready")
+    ui.show_capture_screen(img_status, status="ready")
 
 
 def handle_image_processor_data(data):
     # handle data from pc back to monocle.
     # either saying which side was found,
     # image processing failure, or cube string.
-    pass
+    global camera_ready
+    res = str(data)
+    ui.show_capture_screen(img_status, status=res)
+    camera_ready = True
 
 def send_data(data):
+    # data sending code modified from https://github.com/milesprovus/Monocle-QR-Reader/blob/main/main.py
+    # apparently the best solution is to just ignore the "OSError: Raw data service is busy" error.
     while True:
         try:
             bluetooth.send(data)
@@ -51,11 +57,14 @@ def send_data(data):
         break
 
 def handle_camera_button(button):
+    global camera_ready
+
+    if not camera_ready:
+        return
+    camera_ready = False
     # take a picture and transmit the data to the browser
-    ui.show_capture_screen(IMG_STATUS, status="sending...")
+    ui.show_capture_screen(img_status, status="sending...")
     camera.capture()
-    # image sending code from https://github.com/milesprovus/Monocle-QR-Reader/blob/main/main.py
-    # apparently the best solution is to just ignore the "Raw data service is busy" error.
     time.sleep_ms(CAMERA_CAPTURE_DELAY)
     led.off(led.GREEN)
     while data := camera.read(bluetooth.max_length()):
@@ -63,6 +72,6 @@ def handle_camera_button(button):
     send_data("end")
     time.sleep_ms(CAMERA_READY_DELAY)
     led.on(led.GREEN)
-    ui.show_capture_screen(IMG_STATUS, status="processing...")
+    ui.show_capture_screen(img_status, status="processing...")
 
 main()

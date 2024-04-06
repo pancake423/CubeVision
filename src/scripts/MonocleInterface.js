@@ -44,10 +44,12 @@ class Monocle {
             await Monocle.device.gatt.disconnect();
         }
     }
-    static async transmit(data) {
-        await rawDataRxCharacteristic.writeValueWithoutResponse(new Uint8Array(bytes))
+    static async transmit(string) {
+        let utf8Encode = new TextEncoder();
+        const data = utf8Encode.encode(string);
+        await rawDataRxCharacteristic.writeValueWithoutResponse(new Uint8Array(data))
         .then(() => {
-            console.log("Sent: ", bytes);
+            console.log("Sent: ", data);
         })
         .catch(error => {
             return Promise.reject(error);

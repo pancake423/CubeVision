@@ -45,30 +45,34 @@ ImageProcessor.process = (data) => {
 	9. Feed each colors into the KNN model, and return the corresponding facelet letter.
 		The output is a 9-letter facelet string representing that face
 	*/
-	const img = ImageProcessor.fillGaps(
-		ImageProcessor.removeBackground(
-			ImageProcessor.scale(data, ImageProcessor.SCALE_PX),
-			ImageProcessor.BG_SCAN_THICKNESS, 
-			ImageProcessor.COLOR_THRESH)
-	);
-	const center = ImageProcessor.findCenter(img);
-	const maxima = ImageProcessor.getMaxima(
-		ImageProcessor.smoothData(
-			ImageProcessor.scanShape(img, center, ImageProcessor.N_SCAN_STEPS)
-		)
-	);
-	if (!ImageProcessor.isSquare(maxima)) {
+	try {
+		const img = ImageProcessor.fillGaps(
+			ImageProcessor.removeBackground(
+				ImageProcessor.scale(data, ImageProcessor.SCALE_PX),
+				ImageProcessor.BG_SCAN_THICKNESS, 
+				ImageProcessor.COLOR_THRESH)
+		);
+		const center = ImageProcessor.findCenter(img);
+		const maxima = ImageProcessor.getMaxima(
+			ImageProcessor.smoothData(
+				ImageProcessor.scanShape(img, center, ImageProcessor.N_SCAN_STEPS)
+			)
+		);
+		if (!ImageProcessor.isSquare(maxima)) {
+			return "";
+		}
+		return ImageProcessor.mapToLetters(
+			ImageProcessor.getTileColors(
+				img, 
+				ImageProcessor.getSquareFunction(
+					ImageProcessor.polarToCartesian(maxima, center)
+				)
+			),
+			ImageProcessor.trainingData
+		).join("");
+	} catch {
 		return "";
 	}
-	return ImageProcessor.mapToLetters(
-		ImageProcessor.getTileColors(
-			img, 
-			ImageProcessor.getSquareFunction(
-				ImageProcessor.polarToCartesian(maxima, center)
-			)
-		),
-		ImageProcessor.trainingData
-	).join("");
 
 }
 
