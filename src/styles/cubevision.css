@@ -1,30 +1,73 @@
+@font-face {
+	font-family: RobotoMono;
+	src: url("../assets/RobotoMono-Regular.ttf");
+}
+
 :root {
-    --banner-color: lightgray;
-    --banner-text-color: black;
+    --banner-color: #FEE1C7;
+    --banner-text-color: #33353C;
     --banner-height: 10vh;
 
-    --button-color: green;
-    --button-color-hover: lightgreen;
-    --button-text-color: white;
+    --button-color: #FA7E61;
+    --button-color-hover: #F95C39;
+    --button-text-color: #33353C;
     --button-width: 10rem;
     --button-height: 3rem;
-    --margin: 3rem;
+    --margin: 1.5rem;
 
-    --face-hidden-color: lightgray;
+    --face-hidden-color: #725752;
+    --background-accent-color: #B5A886;
+
+    --icon-size: 3rem
 }
+
+::-webkit-scrollbar {
+    width: 1rem;
+  }
+  ::-webkit-scrollbar-track {
+    background-color: white;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: #33353C;
+    border-radius: 0.5rem;
+  }
+
 body {
     margin: 0;
+    font-family: RobotoMono;
+    overflow-x: hidden;
+    color: #33353C;
 }
 #top-banner {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: end;
+    box-sizing: border-box;
+    padding: 1rem;
+    justify-content: space-between;
     height: var(--banner-height);
     width: 100vw;
     background-color: var(--banner-color);
 }
-#top-banner h1 {
+#text {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    height: 100%;
+}
+#logos {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    height: 100%;
+}
+
+#text h1 {
     color: var(--banner-text-color);
+    margin: 0;
+}
+#text p {
+    color: var(--banner-text-color);
+    margin: 0;
 }
 #body-content {
     position: absolute;
@@ -43,6 +86,11 @@ body {
     right: var(--margin);
     top:var(--margin);
 }
+#button-disconnect {
+    position: absolute;
+    top: calc(var(--margin)*3 + var(--button-height)*2);
+    right:var(--margin);
+}
 #button-restart {
     position: absolute;
     top: calc(var(--margin)*2 + var(--button-height));
@@ -53,12 +101,40 @@ body {
     top: 0;
     left: 50%;
     transform: translateX(-50%);
+    width: 50vw;
+    height: calc(100vh - var(--banner-height) - 2 * var(--margin));
+    margin: var(--margin);
+    text-align: center;
+}
+#table-body {
+    overflow-y: scroll;
+    height: 90%;
+}
+.table-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    width: 100%;
+}
+.table-row > * {
+    width: 25%;
+    height:auto;
 }
 #p-solution {
     position: absolute;
     bottom: var(--margin);
     left: 50%;
     transform: translateX(-50%);
+    width: 50vw;
+    height: 8vh;
+    background-color: #B5A886;
+    color: #725752;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 1rem;
+
 }
 #faces-found {
     position: absolute;
@@ -71,6 +147,10 @@ body {
     transform: translateY(-50%);
     width: 5vw;
     height: 50vh;
+    background-color: var(--background-accent-color);
+    box-sizing: border-box;
+    padding: 1rem;
+    border-radius: 1rem;
 }
 #canvas-3dvis {
     position: absolute;
@@ -88,6 +168,9 @@ body {
     outline: none;
     border: none;
     cursor: pointer;
+    font-family: RobotoMono;
+    font-size: 1.25rem;
+    text-align: center;
 }
 .button:hover {
     background-color: var(--button-color-hover);
@@ -98,7 +181,14 @@ body {
 .face-letter {
     margin: 0;
     color: var(--face-hidden-color);
+    font-size: 2rem;
 }
 .hidden {
     opacity: 0;
+}
+.logo-icon {
+    border-radius: 10%;
+    width: var(--icon-size);
+    height: var(--icon-size);
+    background-color: white;
 }

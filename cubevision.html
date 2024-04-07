@@ -1,9 +1,9 @@
 <head>
+	<script src="src/scripts/KNNModelData.js"></script>
     <script src="src/scripts/ImageProcessor.js"></script>
 	<script src="src/scripts/FaceJoiner.js"></script>
 	<script src="src/scripts/CubeVisualizer.js"></script>
 	<script src="src/scripts/FaceVisualizer.js"></script>
-	<script src="src/scripts/KNNModelData.js"></script>
 	<script src="src/cubejs/lib/cube.js"></script>
 	<script src="src/cubejs/lib/solve.js"></script>
 	<script src="src/scripts/Solver.js"></script>
@@ -13,16 +13,28 @@
 </head>
 <body>
 	<div id="top-banner">
-		<h1>CubeVision</h1>
+		<div id="text">
+			<h1>CubeVision</h1>
+			<p>William Jackson</p>
+		</div>
+		<div id="logos">
+			<img src="src/assets/js-logo.png" class="logo-icon">
+			<img src="src/assets/brilliant-logo.png" class="logo-icon">
+			<img src="src/assets/python-logo.png" class="logo-icon">
+			<img src="src/assets/github-logo.png" class="logo-icon">
+		</div>
 	</div>
 	<div id="body-content">
-		<table id="table-images" class="hidden">
-			<tr>
-				<th>Image</th>
-				<th>Status</th>
-				<th>Result</th>
-			</tr>
-		</table>
+		<div id="table-images" class="hidden">
+			<div class="table-row">
+				<p>Image</p>
+				<p>Status</p>
+				<p>Result</p>
+			</div>
+			<div id="table-body">
+
+			</div>
+		</div>
 		<canvas id="canvas-3dvis" width="400" height="400" class="hidden"></canvas>
 		<div id="faces-found" class="hidden">
 			<p id="r" class="face-letter">R</p>
@@ -32,9 +44,10 @@
 			<p id="w" class="face-letter">W</p>
 			<p id="y" class="face-letter">Y</p>
 		</div>
-		<p id = "p-solution" class="hidden">Example Solution</p>
+		<div id = "p-solution" class="hidden"><p>Example Solution</p></div>
 		<button id="button-connect" class="button large hidden">connect</button>
 		<button id="button-reconnect" class="button hidden">reconnect</button>
 		<button id="button-restart" class="button hidden">restart</button>
+		<button id="button-disconnect" class="button hidden">disconnect</button>
 	</div>
 </body>

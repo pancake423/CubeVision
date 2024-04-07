@@ -10,20 +10,18 @@ var CUBE;
 
 window.onload = () => {
     Monocle.setImageHandler(handleImage);
-    connectScreen();
 
     CUBE = new CubeVis(document.querySelector("#canvas-3dvis"), ["kkkkkkkkk", "kkkkkkkkk", "kkkkkkkkk", "kkkkkkkkk", "kkkkkkkkk", "kkkkkkkkk"]);
     document.querySelector("#button-connect").onclick = connect;
     document.querySelector("#button-reconnect").onclick = connect;
     document.querySelector("#button-restart").onclick = reset;
+
+    connectScreen();
 }
 
 function makeTableRow(imageData, result, faceString) {
-    const row = document.createElement("tr");
-
-    const d1 = document.createElement("td");
-    const d2 = document.createElement("td");
-    const d3 = document.createElement("td");
+    const row = document.createElement("div");
+    row.className = "table-row";
     
     const rawImage = document.createElement("canvas");
     rawImage.width = 640;
@@ -36,13 +34,12 @@ function makeTableRow(imageData, result, faceString) {
     faceImage.width = 400;
     const face = new FaceVis(faceImage, faceString);
 
-    d1.appendChild(rawImage);
-    d2.appendChild(resultString);
-    d3.appendChild(faceImage);
-    row.appendChild(d1);
-    row.appendChild(d2);
-    row.appendChild(d3);
-    document.querySelector("#table-images").appendChild(row);
+    row.appendChild(rawImage);
+    row.appendChild(resultString);
+    row.appendChild(faceImage);
+    const parent = document.querySelector("#table-body")
+    parent.appendChild(row);
+    parent.scrollTop = parent.scrollHeight;
     face.draw();
     rawImage.getContext("2d").putImageData(imageData, 0, 0);
 }
@@ -53,17 +50,20 @@ function setOpacity(l, o) {
 
 function connectScreen() {
     setOpacity(["button-connect"], 1);
-    setOpacity(["button-reconnect", "button-restart", "p-solution", "faces-found", "canvas-3dvis", "table-images"], 0);
+    setOpacity(["button-reconnect", "button-restart", "p-solution", "faces-found", "canvas-3dvis", "table-images", "button-disconnect"], 0);
+    CUBE.stop();
 }
 
 function imageProcessorScreen() {
-    setOpacity(["button-reconnect", "button-restart", "faces-found", "table-images"], 1);
+    setOpacity(["button-reconnect", "button-restart", "faces-found", "table-images", "button-disconnect"], 1);
     setOpacity(["button-connect", "p-solution", "canvas-3dvis"], 0);
+    CUBE.stop();
 }
 
 function solutionScreen() {
-    setOpacity(["button-reconnect", "button-restart", "p-solution", "canvas-3dvis"], 1);
-    setOpacity(["button-connect", "faces-found", "canvas-3dvis", "table-images"], 0);
+    setOpacity(["button-reconnect", "button-restart", "p-solution", "canvas-3dvis", "button-disconnect"], 1);
+    setOpacity(["button-connect", "faces-found", "table-images"], 0);
+    CUBE.start();
 }
 
 function connect() {
@@ -104,6 +104,7 @@ function handleImage(data) {
         }
         const faceColor = colorMap[parsed[4]];
         makeTableRow(data, `${faceColor} face scanned.`, parsed);
+        colorFaceIndicator(parsed[4]);
         FACE_DATA[parsed[4]] = parsed;
         Monocle.transmit("face:" + faceColor.toLowerCase());
         if (!Object.values(FACE_DATA).includes(false)) {

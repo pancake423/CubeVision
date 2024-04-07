@@ -9,7 +9,8 @@ const ImageProcessor = {
 	VALUE_TOLERANCE: 0.2, //square detection. fractional tolerance of corner distance from center
 	ANGLE_TOLERANCE: Math.PI / 12, //square detection. absolute difference between two corners must be within this value of ANGLE_GAP
 	ANGLE_GAP: Math.PI / 2, // square detection. ideal angle between corners
-	TILE_N_SAMPLES: 25 // number of pixels sampled from the square to determine each tile's color
+	TILE_N_SAMPLES: 25, // number of pixels sampled from the square to determine each tile's color
+	trainingData: KNN.trainingDataLighter // change to any one of the datasets in KNNModelData as-needed by lighting conditions.
 };
 
 //attempts to process the given image data as a picture of a rubik's cube face.
