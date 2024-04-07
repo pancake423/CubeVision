@@ -1,5 +1,21 @@
+const FACE_DATA = {
+    "r": false,
+    "g": false,
+    "b": false,
+    "o": false,
+    "w": false,
+    "y": false
+}
+var CUBE;
+
 window.onload = () => {
     Monocle.setImageHandler(handleImage);
+    connectScreen();
+
+    CUBE = new CubeVis(document.querySelector("#canvas-3dvis"), ["kkkkkkkkk", "kkkkkkkkk", "kkkkkkkkk", "kkkkkkkkk", "kkkkkkkkk", "kkkkkkkkk"]);
+    document.querySelector("#button-connect").onclick = connect;
+    document.querySelector("#button-reconnect").onclick = connect;
+    document.querySelector("#button-restart").onclick = reset;
 }
 
 function makeTableRow(imageData, result, faceString) {
@@ -26,9 +42,45 @@ function makeTableRow(imageData, result, faceString) {
     row.appendChild(d1);
     row.appendChild(d2);
     row.appendChild(d3);
-    document.body.appendChild(row); // TODO
+    document.querySelector("#table-images").appendChild(row);
     face.draw();
     rawImage.getContext("2d").putImageData(imageData, 0, 0);
+}
+
+function setOpacity(l, o) {
+    l.forEach(id => document.querySelector('#' + id).style.opacity = o);
+}
+
+function connectScreen() {
+    setOpacity(["button-connect"], 1);
+    setOpacity(["button-reconnect", "button-restart", "p-solution", "faces-found", "canvas-3dvis", "table-images"], 0);
+}
+
+function imageProcessorScreen() {
+    setOpacity(["button-reconnect", "button-restart", "faces-found", "table-images"], 1);
+    setOpacity(["button-connect", "p-solution", "canvas-3dvis"], 0);
+}
+
+function solutionScreen() {
+    setOpacity(["button-reconnect", "button-restart", "p-solution", "canvas-3dvis"], 1);
+    setOpacity(["button-connect", "faces-found", "canvas-3dvis", "table-images"], 0);
+}
+
+function connect() {
+    Monocle.connect().then(_ => imageProcessorScreen())
+}
+
+function reset() {
+    // TODO: send reset signal to moncle, clear image cache or show reconnect screen depending on monocle behavior
+}
+
+function resetFaceIndicators() {
+    const color = getComputedStyle(document.body).getPropertyValue('--face-hidden-color');
+    Object.keys(FaceVis.colors).forEach(id => {if (id !== "k") document.querySelector("#" + id).style.color = color});
+}
+
+function colorFaceIndicator(letter) {
+    document.querySelector("#" + letter).style.color = FaceVis.colors[letter]
 }
 
 function handleImage(data) {
@@ -39,7 +91,7 @@ function handleImage(data) {
     if (parsed === "") {
         // image processing failed
         makeTableRow(data, "Invalid", "kkkkkkkkk");
-        Monocle.transmit("fail");
+        Monocle.transmit("face:fail");
     } else {
         // image processing success
         const colorMap = {
@@ -52,6 +104,21 @@ function handleImage(data) {
         }
         const faceColor = colorMap[parsed[4]];
         makeTableRow(data, `${faceColor} face scanned.`, parsed);
-        Monocle.transmit(faceColor.toLowerCase());
+        FACE_DATA[parsed[4]] = parsed;
+        Monocle.transmit("face:" + faceColor.toLowerCase());
+        if (!Object.values(FACE_DATA).includes(false)) {
+            // all faces found.
+            solve();
+        }
     }
+}
+
+function solve() {
+    solutionScreen();
+    const cubeData = FaceJoiner.join(Object.values(FACE_DATA));
+	CUBE.data = cubeData;
+	const solution = Solver.solve(cubeData);
+	document.querySelector("#p-solution").innerText = solution;
+    Monocle.transmit("cube:" + Solver.stringify(cubeData))
+        .then(_ => Monocle.transmit("solution:" + solution));
 }

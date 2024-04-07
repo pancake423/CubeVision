@@ -4,6 +4,7 @@ import bluetooth
 import camera
 import ui
 import touch
+import cube_vis
 
 NOT_CONNECTED_BLINK_DELAY = 300 #ms
 CAMERA_CAPTURE_DELAY = 100 #ms, time before camera data is sent
@@ -39,23 +40,35 @@ def main():
 def handle_response_data(data):
     # handle data from pc back to monocle.
     # either saying which side was found,
-    # image processing failure, or cube string.
+    # image processing failure, or cube/solution data.
+    # all messages are of the format type:data
     global camera_ready
     res = data.decode() # convert binary string into normal string
+    msg_type, msg_data = res.split(":")
 
-    if len(res) > 10:
-        # TODO: implement next screen.
-        # message is either cube data or solution data.
-        return
+    if msg_type == "face":
+        if msg_data in img_status:
+            # image processing success
+            img_status[msg_data] = True
+            ui.show_capture_screen(img_status, status="ready")
+        else:
+            ui.show_capture_screen(img_status, status="invalid image.")
+        
+        camera_ready = True
 
-    if res in img_status:
-        # image processing success
-        img_status[res] = True
-        ui.show_capture_screen(img_status, status="ready")
-    else:
-        ui.show_capture_screen(img_status, status="invalid image.")
+    elif msg_type == "cube":
+        # TODO: load cube data into 3d visualizer
+        cube_vis.parse_cube(msg_data)
+    elif msg_type == "solution":
+        # TODO: load solution data into 3d visualizer, go to solution screen. (change touch handler also)
+        cube_vis.parse_solution(msg_data)
+    
+    if cube_vis.is_ready():
+        # go to solution screen
+        ui.show_solution_screen(cube_vis.cube_solution[0])
+        touch.callback(touch.A, handle_next_move)
+        pass
 
-    camera_ready = True
 
 def send_data(data):
     # data sending code modified from https://github.com/milesprovus/Monocle-QR-Reader/blob/main/main.py
@@ -85,5 +98,8 @@ def handle_camera_button(button):
     time.sleep_ms(CAMERA_READY_DELAY)
     led.on(led.GREEN)
     ui.show_capture_screen(img_status, status="processing...")
+
+def handle_next_move():
+    pass
 
 main()

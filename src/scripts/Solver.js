@@ -4,17 +4,17 @@ class Solver {
 	static #isInitialized = false;
 	static #init() {
 		Cube.initSolver();
-		Solver.isInitialized = true;
+		Solver.#isInitialized = true;
 	}
 	static solve(faceData) {
-		if (!Solver.isInitialized) Solver.#init();
+		if (!Solver.#isInitialized) Solver.#init();
 		// convert faceData from 2D array into 54 character facelet string.
 		// assumes that faceData has already been sent through FaceJoiner and is correctly ordered.
-		const cube = Cube.fromString(Solver.#stringify(faceData));
+		const cube = Cube.fromString(Solver.stringify(faceData));
 		console.log(cube);
 		return cube.solve();
 	}
-	static #stringify(faceData) {
+	static stringify(faceData) {
 		// NEED TO RE ORDER:
 		// up -> right -> front -> down -> left -> back
 		// my order:

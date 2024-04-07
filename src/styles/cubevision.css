@@ -1,0 +1,104 @@
+:root {
+    --banner-color: lightgray;
+    --banner-text-color: black;
+    --banner-height: 10vh;
+
+    --button-color: green;
+    --button-color-hover: lightgreen;
+    --button-text-color: white;
+    --button-width: 10rem;
+    --button-height: 3rem;
+    --margin: 3rem;
+
+    --face-hidden-color: lightgray;
+}
+body {
+    margin: 0;
+}
+#top-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--banner-height);
+    width: 100vw;
+    background-color: var(--banner-color);
+}
+#top-banner h1 {
+    color: var(--banner-text-color);
+}
+#body-content {
+    position: absolute;
+    left: 0;
+    top: var(--banner-height);
+    width: 100vw;
+    height: calc(100vh - var(--banner-height));
+}
+#button-connect {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+}
+#button-reconnect {
+    position: absolute;
+    right: var(--margin);
+    top:var(--margin);
+}
+#button-restart {
+    position: absolute;
+    top: calc(var(--margin)*2 + var(--button-height));
+    right: var(--margin);
+}
+#table-images {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+#p-solution {
+    position: absolute;
+    bottom: var(--margin);
+    left: 50%;
+    transform: translateX(-50%);
+}
+#faces-found {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    left: var(--margin);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 5vw;
+    height: 50vh;
+}
+#canvas-3dvis {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.button {
+    width: var(--button-width);
+    height: var(--button-height);
+    border-radius: 1rem;
+    background-color: var(--button-color);
+    color: var(--button-text-color);
+    outline: none;
+    border: none;
+    cursor: pointer;
+}
+.button:hover {
+    background-color: var(--button-color-hover);
+}
+.large {
+    transform: translate(-50%, -50%) scale(200%, 200%);
+}
+.face-letter {
+    margin: 0;
+    color: var(--face-hidden-color);
+}
+.hidden {
+    opacity: 0;
+}
