@@ -7,11 +7,14 @@
 	<script src="src/cubejs/lib/cube.js"></script>
 	<script src="src/cubejs/lib/solve.js"></script>
 	<script src="src/scripts/Solver.js"></script>
+	<script src="src/scripts/ColorBalancer.js"></script>
     <script src="src/scripts/MonocleInterface.js"></script>
     <script src="src/scripts/cubevision.js"></script>
 	<link rel="stylesheet" href="src/styles/cubevision.css">
 </head>
 <body>
+	<div id="blocker"></div>
+	<p id="title"></p>
 	<div id="top-banner">
 		<div id="text">
 			<h1>CubeVision</h1>
@@ -27,8 +30,8 @@
 	<div id="body-content">
 		<div id="table-images" class="hidden">
 			<div class="table-row">
-				<p>Image</p>
-				<p>Status</p>
+				<p>Raw Image</p>
+				<p>Processed Image</p>
 				<p>Result</p>
 			</div>
 			<div id="table-body">
@@ -44,7 +47,7 @@
 			<p id="w" class="face-letter">W</p>
 			<p id="y" class="face-letter">Y</p>
 		</div>
-		<div id = "p-solution" class="hidden"><p>Example Solution</p></div>
+		<div id="p-solution" class="hidden"><p>Example Solution</p></div>
 		<button id="button-connect" class="button large hidden">connect</button>
 		<button id="button-reconnect" class="button hidden">reconnect</button>
 		<button id="button-restart" class="button hidden">restart</button>

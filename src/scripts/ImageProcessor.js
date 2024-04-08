@@ -10,7 +10,7 @@ const ImageProcessor = {
 	ANGLE_TOLERANCE: Math.PI / 12, //square detection. absolute difference between two corners must be within this value of ANGLE_GAP
 	ANGLE_GAP: Math.PI / 2, // square detection. ideal angle between corners
 	TILE_N_SAMPLES: 25, // number of pixels sampled from the square to determine each tile's color
-	trainingData: KNN.trainingDataLighter // change to any one of the datasets in KNNModelData as-needed by lighting conditions.
+	trainingData: KNN.DARK_BALANCE // change to any one of the datasets in KNNModelData as-needed by lighting conditions.
 };
 
 //attempts to process the given image data as a picture of a rubik's cube face.
@@ -75,6 +75,41 @@ ImageProcessor.process = (data) => {
 		return "";
 	}
 
+}
+
+ImageProcessor.cleanUp = (data) => {
+	const balanced = Balancer.balance(data);
+	const img = ImageProcessor.fillGaps(
+		ImageProcessor.removeBackground(
+			ImageProcessor.scale(balanced, ImageProcessor.SCALE_PX),
+			ImageProcessor.BG_SCAN_THICKNESS, 
+			ImageProcessor.COLOR_THRESH)
+	);
+	return img;
+}
+ImageProcessor.scanAsCube = (img) => {
+	try {
+		const center = ImageProcessor.findCenter(img);
+		const maxima = ImageProcessor.getMaxima(
+			ImageProcessor.smoothData(
+				ImageProcessor.scanShape(img, center, ImageProcessor.N_SCAN_STEPS)
+			)
+		);
+		if (!ImageProcessor.isSquare(maxima)) {
+			return "";
+		}
+		return ImageProcessor.mapToLetters(
+			ImageProcessor.getTileColors(
+				img, 
+				ImageProcessor.getSquareFunction(
+					ImageProcessor.polarToCartesian(maxima, center)
+				)
+			),
+			ImageProcessor.trainingData
+		).join("");
+	} catch {
+		return "";
+	}
 }
 
 //scales an image to be targetWidth pixels wide.

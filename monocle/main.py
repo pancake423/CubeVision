@@ -5,6 +5,7 @@ import camera
 import ui
 import touch
 import cube_vis
+import device
 
 NOT_CONNECTED_BLINK_DELAY = 300 #ms
 CAMERA_CAPTURE_DELAY = 100 #ms, time before camera data is sent
@@ -50,10 +51,8 @@ def handle_response_data(data):
         if msg_data in img_status:
             # image processing success
             img_status[msg_data] = True
-            ui.show_capture_screen(img_status, status="ready")
-        else:
-            ui.show_capture_screen(img_status, status="invalid image.")
-        
+            
+        ui.show_capture_screen(img_status, status="ready")
         camera_ready = True
 
     elif msg_type == "cube":
@@ -62,6 +61,8 @@ def handle_response_data(data):
     elif msg_type == "solution":
         # TODO: load solution data into 3d visualizer, go to solution screen. (change touch handler also)
         cube_vis.parse_solution(msg_data)
+    elif msg_type == "reset":
+        device.reset()
     
     if cube_vis.is_ready():
         # go to solution screen

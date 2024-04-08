@@ -158,6 +158,24 @@ body {
     top: 50%;
     transform: translate(-50%, -50%);
 }
+#title {
+    position: absolute;
+    margin: 0;
+    left: 50%;
+    top: 1.5rem;
+    transform: translateX(-50%);
+    color: #FA7E61;
+    font-size: 2rem;
+    font-family: RobotoMono;
+}
+#blocker {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 500;
+}
 
 .button {
     width: var(--button-width);
