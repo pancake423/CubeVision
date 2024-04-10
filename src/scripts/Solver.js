@@ -8,10 +8,13 @@ class Solver {
 	}
 	static solve(faceData) {
 		if (!Solver.#isInitialized) Solver.#init();
-		// convert faceData from 2D array into 54 character facelet string.
+		// convert faceData from 2D array into 54 character facelet string (if needed).
 		// assumes that faceData has already been sent through FaceJoiner and is correctly ordered.
-		const cube = Cube.fromString(Solver.stringify(faceData));
-		console.log(cube);
+		let cubeData = faceData;
+		if (Array.isArray(cubeData)) {
+            cubeData = Solver.stringify(cubeData);
+        }
+		const cube = Cube.fromString(cubeData);
 		return cube.solve();
 	}
 	static stringify(faceData) {
