@@ -8,22 +8,25 @@ class MonocleTest {
 
     constructor(cube) {
         // if no arguments provided, generate a random one.
-        let cubeData = cube;
+        this.cubeData = cube;
         if (cube === undefined) {
-            cubeData = MonocleTest.generateCube();
+            this.cubeData = MonocleTest.generateCube();
         }
         // expected data type: 54-character string for cubeData
         // if cubeData is an array, assume it needs to be converted
-        if (Array.isArray(cubeData)) {
-            cubeData = Solver.stringify(cubeData);
+        if (Array.isArray(this.cubeData)) {
+            this.cubeData = Solver.stringify(this.cubeData);
         }
         // solve cube
-        const solution = Solver.solve(cubeData);
-        console.log(cubeData, solution);
+        this.solution = Solver.solve(this.cubeData);
 
         // connect to Monocle, transmit data
-        Monocle.connect()
-        .then(_ => Monocle.transmit(cubeData))
-        .then(_ => Monocle.transmit(solution));
+        Monocle.connect().then(_ => window.setTimeout(() => this.send(), 1500));
+    }
+
+    send() {
+        Monocle.transmit(`cube:${this.cubeData}`)
+        .then(_ => Monocle.transmit(`solution:${this.solution}`))
+        .then(_ => Monocle.disconnect());
     }
 }

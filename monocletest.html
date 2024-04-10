@@ -6,8 +6,13 @@
     <script src="src/scripts/MonocleTest.js"></script>
     <script>
         window.onload = () => {
-
+            document.querySelector("#b").onclick = () => {
+                const test = new MonocleTest();
+                console.log(test);
+            }
         }
     </script>
 </head>
-<body></body>
+<body>
+    <button id="b">test</button>
+</body>
