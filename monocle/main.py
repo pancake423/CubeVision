@@ -23,6 +23,7 @@ img_status = {
 }
 
 def main():
+    cube_vis.init((320, 250), 75)
     ui.show_waiting_connect()
 
     while not bluetooth.connected():
@@ -66,7 +67,7 @@ def handle_response_data(data):
     
     if cube_vis.is_ready():
         # go to solution screen
-        ui.show_solution_screen(cube_vis.cube_solution[0])
+        ui.show_alert_screen("Ready To Solve")
         touch.callback(touch.A, handle_next_move)
         pass
 
@@ -100,7 +101,13 @@ def handle_camera_button(button):
     led.on(led.GREEN)
     ui.show_capture_screen(img_status, status="processing...")
 
-def handle_next_move():
+def handle_next_move(button):
+    if cube_vis.animating == False:
+        touch.callback(touch.A, disabled)
+        cube_vis.animate_move()
+        touch.callback(touch.A, handle_next_move)
+
+def disabled(button):
     pass
 
 main()

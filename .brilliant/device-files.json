@@ -1,5 +1,6 @@
 {
 	"/monocle/main.py": "main.py",
 	"/monocle/ui.py": "ui.py",
-	"/monocle/cube_vis.py": "cube_vis.py"
+	"/monocle/cube_vis.py": "cube_vis.py",
+	"/monocle/moves.py": "moves.py"
 }
