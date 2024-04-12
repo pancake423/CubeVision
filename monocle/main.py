@@ -45,6 +45,7 @@ def handle_response_data(data):
     # image processing failure, or cube/solution data.
     # all messages are of the format type:data
     global camera_ready
+    global img_status
     res = data.decode() # convert binary string into normal string
     msg_type, msg_data = res.split(":")
 
@@ -63,6 +64,13 @@ def handle_response_data(data):
         # TODO: load solution data into 3d visualizer, go to solution screen. (change touch handler also)
         cube_vis.parse_solution(msg_data)
     elif msg_type == "reset":
+        img_status["blue"] = False
+        img_status["green"] = False
+        img_status["red"] = False
+        img_status["orange"] = False
+        img_status["white"] = False
+        img_status["yellow"] = False
+        ui.show_capture_screen(img_status, status="ready")
         device.reset()
     
     if cube_vis.is_ready():

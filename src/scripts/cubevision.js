@@ -82,8 +82,9 @@ function connect() {
 }
 
 function reset() {
-    // TODO: send reset signal to moncle, clear image cache and show reconnect screen
+    // TODO: send reset signal to moncle, clear image cache and show processor screen
     Monocle.transmit("reset:reset").then(_ => {
+        resetFaceIndicators();
         imageProcessorScreen();
         FACE_DATA = {
             "r": false,
