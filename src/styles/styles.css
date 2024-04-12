@@ -45,8 +45,9 @@ h1 {
 }
 #solution {
 	position: absolute;
-	left: 1rem;
-	bottom: 1rem;
+	left: 0.5rem;
+	bottom: 0.5rem;
+	margin: 0;
 }
 .monocle-center {
 	position: absolute;
@@ -54,7 +55,7 @@ h1 {
 	transform: translateX(-50%);
 }
 #next {
-	top: 85vh;
+	top: 93vh;
 }
 #monocle-text {
 	top: 40vh;

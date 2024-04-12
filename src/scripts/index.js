@@ -70,8 +70,20 @@ function checkAllFacesLoaded() {
 	DataCollector.cube.data = cubeData;
 	const solution = Solver.solve(cubeData);
 	document.querySelector("#solution").innerText = `Solution: ${solution}`;
+	const moveVis = new MoveVis(document.querySelector("#soln"), cubeData, solution, document.querySelector("#monocle-text"));
+	document.querySelector("#next").onclick = () => next(moveVis);
 }
 
 function deleteFaces() {
 	document.querySelector("#top").innerHTML = "";
+}
+
+function next(m) {
+	if (m.animating) {
+		return;
+	}
+	m.animateMove((cubeData) => {
+		const reformatted = cubeData.map(l => l.join(""));
+		DataCollector.cube.data = reformatted;
+	});
 }

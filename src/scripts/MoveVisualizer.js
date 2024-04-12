@@ -33,7 +33,18 @@ class MoveVis {
         return [face_code, direction_code];
     }
 
-    constructor(targetCanvas, cubeData, solutionString) {
+    static codeToString(code) {
+        const face_translation = ["White", "Orange", "Green", "Red", "Blue", "Yellow"];
+        if (code[1] == 1) {
+            return `${face_translation[code[0]]} face 90deg CW`;
+        }
+        else if (code[1] == 2) {
+            return `${face_translation[code[0]]} face 180deg CW`;
+        }
+        return `${face_translation[code[0]]} face 90deg CCW`;
+    }
+
+    constructor(targetCanvas, cubeData, solutionString, textTarget) {
         this.c = targetCanvas;
         this.ctx = this.c.getContext("2d");
         this.w = this.c.width;
@@ -49,6 +60,8 @@ class MoveVis {
         this.moves = solutionString.split(" ");
         this.moveIdx = 0;
         this.animating = false;
+
+        this.textTarget = textTarget;
 
     }
 
@@ -170,8 +183,8 @@ class MoveVis {
     }
 
     drawFace(code, angle) {
-        const tileSize = this.w/5;
-        const sc = this.w*0.2;
+        const tileSize = this.w/6;
+        const sc = (this.w - tileSize * 3) / 2;
         const faceData = this.cubeData[code[0]];
 
         this.ctx.save();
@@ -190,23 +203,35 @@ class MoveVis {
         this.ctx.restore();
     }
 
-    animateMove(move) {
+    animateMove(callback) {
+        const move = this.moves[this.moveIdx];
+        this.moveIdx += 1;
+        if (move == undefined) {
+            // done
+            this.textTarget.innerText = "Solved!";
+            return;
+        }
+
         const moveCode = MoveVis.moveToCode(move);
+        this.textTarget.innerText = MoveVis.codeToString(moveCode);
         this.animating = true;
-        let dx = 0.01 * moveCode[1];
+        let dx = 0.02 * moveCode[1];
         let angle = 0;
-        window.requestAnimationFrame(() => this.step(move, moveCode, angle, dx));
+        window.requestAnimationFrame(() => this.step(move, moveCode, angle, dx, callback));
     }
     
-    step(move, moveCode, angle, dx) {
+    step(move, moveCode, angle, dx, callback) {
         this.ctx.clearRect(0, 0, this.w, this.h);
         this.drawFace(moveCode, angle);
         this.drawArrow(moveCode);
         if (Math.abs(angle) < Math.abs(moveCode[1] * Math.PI/2)) {
-            window.requestAnimationFrame(() => this.step(move, moveCode, angle + dx, dx));
+            window.requestAnimationFrame(() => this.step(move, moveCode, angle + dx, dx, callback));
         } else {
             this.animating = false;
             this.makeMove(move);
+            if (callback != undefined) {
+                callback(this.cubeData);
+            }
         }
     }
 }
