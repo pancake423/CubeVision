@@ -54,7 +54,7 @@ function handle(data) {
 	parsedImg.className = "img-display";
 	div.appendChild(rawImg);
 	div.appendChild(parsedImg);
-	document.querySelector("#left").appendChild(div);
+	document.querySelector("#top").appendChild(div);
 	showImageData(data, rawImg);
 	const f = new FaceVis(parsedImg, parsed);
 	f.draw();
@@ -73,5 +73,5 @@ function checkAllFacesLoaded() {
 }
 
 function deleteFaces() {
-	document.querySelector("#left").innerHTML = "";
+	document.querySelector("#top").innerHTML = "";
 }

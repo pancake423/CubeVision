@@ -10,15 +10,18 @@
 	<script src="src/cubejs/lib/cube.js"></script>
 	<script src="src/cubejs/lib/solve.js"></script>
 	<script src="src/scripts/Solver.js"></script>
-	<script src="src/scripts/MonocleInterface.js"></script>
+	<script src="src/scripts/MoveVisualizer.js"></script>
 </head>
 
 <body>
 	<input type="file" accept="image/*" id="file-input" multiple style="width: 100%;">
-	<div id="left" class="flex-col">
+	<div id="top" class="flex-row">
 	</div>
-	<div id="right" class="flex-col">
-		<canvas id="vis" width=500 height=500></canvas>
+	<div id="bottom" class="flex-row">
+		<canvas id="vis" width=400 height=400></canvas>
+		<canvas id="soln" width=400 height=400></canvas>
 	</div>
 	<h3 id="solution"></h3>
+	<button id="next" class="monocle-center">next</button>
+	<h3 id="monocle-text" class="monocle-center">[monocle output]</h3>
 </body>

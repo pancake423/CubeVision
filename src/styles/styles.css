@@ -5,37 +5,57 @@
 body {
 	margin: 1rem;
 	display: flex;
-	flex-direction: row;
+	flex-direction: column;
 	align-items: flex-start;
 	justify-content: space-evenly;
 	flex-wrap: wrap;
 	font-family: RobotoMono;
+	overflow-y: hidden;
 }
 .img-display {
 	width: 15vh;
 	margin: 1rem;
 }
-.flex-col {
+.flex-row {
 	margin: 1rem;
 	display: flex;
-	flex-direction: column;
+	flex-direction: row;
 	align-items: flex-start;
-	justify-content: flex-start;
-	width: 40%;
+	justify-content: space-evenly;
+	width: calc(100% - 2rem);
 	flex-wrap: wrap;
-	height: 80vh;
+}
+#top {
+	height: 30vh
+}
+#bottom {
+	height: 50vh
 }
 .face-container {
-	width: 50%;
+	width: 15vw;
 }
 h1 {
 	margin: 0;
 }
-#vis {
+#vis, #soln {
 	border: 1px solid black;
+	width: 50vh;
+	height: 50vh;
+	box-sizing: border-box;
 }
 #solution {
 	position: absolute;
 	left: 1rem;
 	bottom: 1rem;
+}
+.monocle-center {
+	position: absolute;
+	left: calc((100vw - 100vh - 4rem) * 2/3 + 75vh + 2rem);
+	transform: translateX(-50%);
+}
+#next {
+	top: 85vh;
+}
+#monocle-text {
+	top: 40vh;
 }
